@@ -1,5 +1,6 @@
 import logging
 import os
+import json
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 from binance.client import Client
 
@@ -34,8 +35,9 @@ def error(update, context):
 def price(update, context):
     pair = update.message.text
     binance_client = Client()
-    resp = binance_client.futures_symbol_ticker(symbol='BTCUSDT')
-    update.message.reply_text(resp)
+    resp = binance_client.futures_symbol_ticker(symbol=pair)
+    obj = json.load(resp)
+    update.message.reply_text(f"{obj.symbol}:{obj.price}")
 
 
 def main():
