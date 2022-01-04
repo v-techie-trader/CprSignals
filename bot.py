@@ -1,6 +1,7 @@
 import logging
 import os
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+from binance.client import Client
 
 # Enables logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -29,6 +30,12 @@ def echo(update, context):
 def error(update, context):
     """Logs Errors caused by Updates."""
     logger.warning('Update "%s" caused error "%s"', update, context.error)
+
+def price(update, context):
+    pair = update.message.text
+    binance_client = Client()
+    resp = binance_client.futures_symbol_ticker(symbol='BTCUSDT')
+    update.message.reply_text(resp)
 
 
 def main():
