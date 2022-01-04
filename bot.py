@@ -35,10 +35,11 @@ def error(update, context):
 def price(update, context):
     pair = update.message.text
     binance_client = Client()
-    resp = binance_client.futures_symbol_ticker(symbol=pair)
-    obj = json.load(resp)
-    logger.info('pair "%s" resp "%s"', pair, resp)
-    update.message.reply_text(f"{obj.symbol}:{obj.price}")
+    # resp = binance_client.futures_symbol_ticker(symbol=pair)
+    # obj = json.load(resp)
+    # logger.info('pair "%s" resp "%s"', pair, resp)
+    # update.message.reply_text(f"{obj.symbol}:{obj.price}")
+    update.message.reply_text(f"{pair}")
 
 
 def main():
