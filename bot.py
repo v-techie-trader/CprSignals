@@ -272,18 +272,31 @@ def fibpivot_support_alert(update, context):
         fibpivot_all_support_alert(update, context)
     else :
         fibpivot_single_support_alert(update, context)
+
 pivot_map={}
 def fibpivot_all_support_alert(update, context):
     context.bot.send_message(chat_id=update.effective_chat.id, text="Loading Pivots pls wait for few minutes.....")
+    
+    context.job_queue.run_once(update_pivots, when=5, context=[update.message.chat_id])
+    context.job_queue.run_repeating(price_alert_all_futures, interval=600, first=300, context=[pivot_map, update.effective_chat.id])
+
+    
+    
+def update_pivots(context):
+    chat_id = context.job.context[0]
     logger.info(f"Loading Fib Pivots")
     pivot_map.clear()
-    for pair in list : 
+    count = 0
+    total = len(list)
+    for pair in list :
+        count=count+1
         pivot_map[pair]= get_fib_pivots(pair)
+        logger.info(f"updating {count} / {total}")
     logger.info(f"Loaded Fib Pivots")
-
     response = "⏳ I will send you a message every 10 mins with list of all Future Pairs near fib pivot s1 or s3"
-    context.job_queue.run_repeating(price_alert_all_futures, interval=600, first=5, context=[pivot_map, update.message.chat_id])
-    context.bot.send_message(chat_id=update.effective_chat.id, text=response)
+  
+
+    context.bot.send_message(chat_id=chat_id, text=response)
 
 def price_alert_all_futures(context):
     logger.info("*** Starting to check all Future pairs *****")
