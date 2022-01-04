@@ -37,6 +37,7 @@ def price(update, context):
     binance_client = Client()
     resp = binance_client.futures_symbol_ticker(symbol=pair)
     obj = json.load(resp)
+    logger.debug('pair "%s" resp "%s"', pair, resp)
     update.message.reply_text(f"{obj.symbol}:{obj.price}")
 
 
