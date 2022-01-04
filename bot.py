@@ -281,7 +281,7 @@ def fibpivot_all_support_alert(update, context):
         pivot_map[pair]= get_fib_pivots(pair)
     logger.info(f"Loaded Fib Pivots")
 
-    response = "⏳ I will send you a message every 5 mins with list of all Future Pairs near fib pivot s1 or s3"
+    response = "⏳ I will send you a message every 10 mins with list of all Future Pairs near fib pivot s1 or s3"
     context.job_queue.run_repeating(price_alert_all_futures, interval=600, first=5, context=[pivot_map, update.message.chat_id])
     context.bot.send_message(chat_id=update.effective_chat.id, text=response)
 
