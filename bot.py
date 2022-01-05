@@ -162,9 +162,10 @@ def start(update, context):
 def help(update, context):
     """Sends a message when the command /help is issued."""
     update.message.reply_text('Commands\n'+ \
-            '/price <Binance Future Pair>    - Example /price BTCUSDT \n'
-            '/ohlc <Binance Future Pair> - Example /ohlc BTCUSDT \n'
-            '/fibpivot <Binance Future Pair> - Example /fibpivot BTCUSDT \n'
+            '/price &lt;Binance Future Pair&gt;    \n       ===> Example /price BTCUSDT \n       ===> Get Current price\n'
+            '/ohlc  &lt;Binance Future Pair&gt;    \n       ===> Example /ohlc BTCUSDT \n       ===> get OHLC\n'
+            '/fibpivot &lt;Binance Future Pair&gt; \n       ===> Example /fibpivot BTCUSDT \n       ===> Get Fib Pivot\n'
+            '/fibpivot_alert ALL                   \n       ===> To generate alerts every 10 mins for pairs near S1 S3 R1 R3 \n'
     )
 
 
@@ -255,31 +256,22 @@ def price_alert(update, context):
     
     context.bot.send_message(chat_id=update.effective_chat.id, text=response)
 
-def fibpivot_single_support_alert(update, context):
+def fibpivot_single_alert(update, context):
     pair = context.args[0].upper()
-    (r3, r2, r1, p, s1, s2, s3) = get_fib_pivots(pair)
-    logger.info(f"{pair} <= {s1} or {s3}")
-    context.job_queue.run_repeating(priceAlertCallback, interval=15, first=5, context=[pair, '<', s1, s3, update.message.chat_id])
-    
-    binance_client = Client()
-    resp = binance_client.futures_symbol_ticker(symbol=pair)
-    response = f"⏳ I will send you a message when the price of {pair} reaches s1 => {s1} or s3 => {s3}, \n"
-    response += f"the current price of {pair} is {resp['price']}"
+    context.bot.send_message(chat_id=update.effective_chat.id, text="Loading Pivots pls wait for few minutes.....")
+    context.job_queue.run_once(update_pivots, when=5, context=[update.message.chat_id, [pair]])
 
-    context.bot.send_message(chat_id=update.effective_chat.id, text=response)
-
-def fibpivot_support_alert(update, context):
+def fibpivot_alert(update, context):
 
     if(context.args[0].upper()=="ALL") :
-        fibpivot_all_support_alert(update, context)
+        fibpivot_all_alert(update, context)
     else :
-        fibpivot_single_support_alert(update, context)
+        fibpivot_single_alert(update, context)
 
 pivot_map={}
-def fibpivot_all_support_alert(update, context):
+def fibpivot_all_alert(update, context):
     context.bot.send_message(chat_id=update.effective_chat.id, text="Loading Pivots pls wait for few minutes.....")
-    
-    context.job_queue.run_once(update_pivots, when=5, context=[update.message.chat_id])
+    context.job_queue.run_once(update_pivots, when=5, context=[update.message.chat_id, list])
     
 
 max_workers=10
@@ -287,6 +279,7 @@ max_workers=10
     
 def update_pivots(context):
     chat_id = context.job.context[0]
+    list = context.job.context[1]
     logger.info(f"Loading Fib Pivots")
     pivot_map.clear()
     count = 0
@@ -300,7 +293,7 @@ def update_pivots(context):
     logger.info(f"Loaded Fib Pivots")
     response = "⏳ Fib Pivots Updated \n I will send you a message every 10 mins with list of all Future Pairs near fib pivot s1 or s3"
     
-    context.job_queue.run_repeating(price_alert_all_futures, interval=600, first=5, context=[pivot_map, chat_id])
+    context.job_queue.run_repeating(price_alert_all_futures, interval=600, first=5, context=[pivot_map, chat_id, list])
 
     context.bot.send_message(chat_id=chat_id, text=response)
 
@@ -308,6 +301,7 @@ def price_alert_all_futures(context):
     logger.info("*** Starting to check all Future pairs *****")
     pivot_map = context.job.context[0]
     chat_id = context.job.context[1]
+    list = context.job.context[2]
   
     count = 0
     total = len(list)
@@ -412,7 +406,7 @@ def main():
     dp.add_handler(CommandHandler("fibpivot", fibpivot))
     
     dp.add_handler(CommandHandler("price_alert", price_alert))
-    dp.add_handler(CommandHandler("fibpivot_support_alert", fibpivot_support_alert))
+    dp.add_handler(CommandHandler("fibpivot_alert", fibpivot_alert))
 
     # on noncommand i.e message - echo the message on Telegram
     dp.add_handler(MessageHandler(Filters.text, echo))
