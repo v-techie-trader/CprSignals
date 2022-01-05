@@ -1,3 +1,4 @@
+import functools
 import logging
 import os
 from queue import Empty
@@ -9,6 +10,7 @@ from telegram.ext.callbackcontext import CallbackContext
 from datetime import date
 from datetime import timedelta
 from telegram import ParseMode
+import concurrent.futures
 # Enables logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
@@ -278,9 +280,10 @@ def fibpivot_all_support_alert(update, context):
     context.bot.send_message(chat_id=update.effective_chat.id, text="Loading Pivots pls wait for few minutes.....")
     
     context.job_queue.run_once(update_pivots, when=5, context=[update.message.chat_id])
-    context.job_queue.run_repeating(price_alert_all_futures, interval=600, first=300, context=[pivot_map, update.effective_chat.id])
-
     
+
+max_workers=10
+
     
 def update_pivots(context):
     chat_id = context.job.context[0]
@@ -288,13 +291,16 @@ def update_pivots(context):
     pivot_map.clear()
     count = 0
     total = len(list)
-    for pair in list :
-        count=count+1
-        pivot_map[pair]= get_fib_pivots(pair)
-        logger.info(f"updating {count} / {total}")
+    with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
+        for pair, (r3, r2, r1, p, s1, s2, s3) in zip(list, executor.map(get_fib_pivots, list)):
+            pivot_map[pair]= (r3, r2, r1, p, s1, s2, s3)
+            count=count+1
+            logger.info(f"{count} / {total} ------> {pair} updated")
+
     logger.info(f"Loaded Fib Pivots")
-    response = "⏳ I will send you a message every 10 mins with list of all Future Pairs near fib pivot s1 or s3"
-  
+    response = "⏳ Fib Pivots Updated \n I will send you a message every 10 mins with list of all Future Pairs near fib pivot s1 or s3"
+    
+    context.job_queue.run_repeating(price_alert_all_futures, interval=600, first=5, context=[pivot_map, chat_id])
 
     context.bot.send_message(chat_id=chat_id, text=response)
 
@@ -302,26 +308,60 @@ def price_alert_all_futures(context):
     logger.info("*** Starting to check all Future pairs *****")
     pivot_map = context.job.context[0]
     chat_id = context.job.context[1]
-    response =""
-    binance_client = Client()
-    for pair in list : 
-        (r3, r2, r1, p, s1, s2, s3) = pivot_map.get(pair)
+  
+    count = 0
+    total = len(list)
+    partial_check_price = functools.partial(check_support_resistance_price, pivot_map)
+
+    with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
+
+        sresponse =""
+        rresponse =""
+        for pair, (s_response, r_response) in zip(list, executor.map(partial_check_price, list)):
+            count=count+1
+            logger.info(f"{count} / {total} ------> {pair} => \n {s_response} {r_response}")
+            if(s_response != "") :
+                sresponse +=s_response
+            if(r_response != "") :
+                rresponse +=r_response
+
+        if(sresponse ==""):
+            sresponse = "No USDT pairs are near FibPivot support"
+        if(rresponse ==""):
+            rresponse = "No USDT pairs are near FibPivot Resistance"
+            
+        sresponse ="Supports - S1 S3 \n\n"+sresponse
+        rresponse ="Resistances - R1 R3 \n\n"+rresponse
+        logger.info(f"{sresponse}")
+        logger.info(f"{rresponse}")
+        logger.info("*** Finished to check all Future pairs *****")
+        context.bot.send_message(chat_id=chat_id, text=sresponse)
+        context.bot.send_message(chat_id=chat_id, text=rresponse)
+
        
-        resp = binance_client.futures_symbol_ticker(symbol=pair)
-        current_price = resp['price']
-        if (float(current_price) <= float(s1)):
-            response += f"{pair} current price:{current_price} near s1 =>{s1} \n"
-            logger.info(f"{pair} near s1 {s1}")
-        elif (float(current_price) <= float(s3)):
-            response += f"{pair} current price:{current_price} near s3 =>{s3} \n"
-            logger.info(f"{pair} near s3 {s3}")
-        # else :
-            # logger.info(f"{pair} - None")
-    if(response ==""):
-        response = "No USDT pairs are near FibPivot support"
-    logger.info(f"{response}")
-    logger.info("*** Finished to check all Future pairs *****")
-    context.bot.send_message(chat_id=chat_id, text=response)
+def check_support_resistance_price(pivot_map, pair) :
+    binance_client = Client()
+    (r3, r2, r1, p, s1, s2, s3) = pivot_map.get(pair)
+    resp = binance_client.futures_symbol_ticker(symbol=pair)
+    current_price = resp['price']
+    # logger.info(f"{pair} - {s1}  {s3}  {current_price}")
+    s_response =""
+    r_response =""
+    if (float(current_price) <= float(s3)):
+        s_response = f"{pair} => {current_price} near s3 =>{s3} \n"
+        logger.info(f"{pair} near s3 {s3}")
+    elif (float(current_price) <= float(s1)):
+        s_response = f"{pair} => {current_price} near s1 =>{s1} \n"
+        logger.info(f"{pair} =>  {s1}")
+    elif (float(current_price) >= float(r3)):
+        r_response = f"{pair} => {current_price} near r3 =>{r3} \n"
+        logger.info(f"{pair} near r3 {r3}")
+    elif (float(current_price) >= float(r1)):
+        r_response = f"{pair} => {current_price} near r1 =>{r1} \n"
+        logger.info(f"{pair} near r1 {r1}")
+
+    return (s_response, r_response)
+
 
 def priceAlertCallback(context) :
     pair = context.job.context[0]
