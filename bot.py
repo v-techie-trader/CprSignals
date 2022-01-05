@@ -291,7 +291,7 @@ def update_pivots(context):
             logger.info(f"{count} / {total} ------> {pair} updated")
 
     logger.info(f"Loaded Fib Pivots")
-    response = "⏳ Fib Pivots Updated \n I will send you a message every 10 mins with list of all Future Pairs near fib pivot s1 or s3"
+    response = "⏳ Fib Pivots Updated \n I will send you a message every 10 mins with list of all Future Pairs near fib pivot S1 or S3 or R1 or R3"
     
     context.job_queue.run_repeating(price_alert_all_futures, interval=600, first=5, context=[pivot_map, chat_id, list])
 
@@ -309,23 +309,34 @@ def price_alert_all_futures(context):
 
     with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
 
-        sresponse =""
-        rresponse =""
-        for pair, (s_response, r_response) in zip(list, executor.map(partial_check_price, list)):
+        s1response =""
+        s3response =""
+        r1response =""
+        r3response =""
+        for pair, (s1_response, s3_response, r1_response, r3_response) in zip(list, executor.map(partial_check_price, list)):
             count=count+1
-            logger.info(f"{count} / {total} ------> {pair} => \n {s_response} {r_response}")
-            if(s_response != "") :
-                sresponse +=s_response
-            if(r_response != "") :
-                rresponse +=r_response
+            logger.info(f"{count} / {total} ------> {pair} => \n {s1_response} {s3_response} {r1_response} {r3_response}")
+            if(s1_response != "") :
+                s1response +=s1_response
+            if(s3_response != "") :
+                s3response +=s3_response
+            if(r1_response != "") :
+                r1response +=r1_response
+            if(r3_response != "") :
+                r3response +=r3_response
 
-        if(sresponse ==""):
-            sresponse = "No USDT pairs are near FibPivot support"
-        if(rresponse ==""):
-            rresponse = "No USDT pairs are near FibPivot Resistance"
+        sresponse =""
+        if(s1response ==""):
+            s1response = "No USDT pairs are near FibPivot S1"
+        if(s3response ==""):
+            s3response = "No USDT pairs are near FibPivot S3"
+        if(r1response ==""):
+            r1response = "No USDT pairs are near FibPivot R1"
+        if(r3response ==""):
+            r3response = "No USDT pairs are near FibPivot R3"
             
-        sresponse ="Supports - S1 S3 \n\n"+sresponse
-        rresponse ="Resistances - R1 R3 \n\n"+rresponse
+        sresponse ="Supports - S1 \n\n"+s1response+"\n\nSupports - S3 \n\n"+s3response
+        rresponse ="Resistances - R1 \n\n"+r1response+"\n\nResistances - R3 \n\n"+r3response
         logger.info(f"{sresponse}")
         logger.info(f"{rresponse}")
         logger.info("*** Finished to check all Future pairs *****")
@@ -339,22 +350,24 @@ def check_support_resistance_price(pivot_map, pair) :
     resp = binance_client.futures_symbol_ticker(symbol=pair)
     current_price = resp['price']
     # logger.info(f"{pair} - {s1}  {s3}  {current_price}")
-    s_response =""
-    r_response =""
+    s1_response =""
+    s3_response =""
+    r1_response =""
+    r3_response =""
     if (float(current_price) <= float(s3)):
-        s_response = f"{pair}  =>  {current_price} \t near s3  =>  {s3} \n"
+        s3_response = f"{pair}  =>  {current_price} \t near s3  =>  {s3} \n"
         logger.info(f"{pair} near s3 {s3}")
     elif (float(current_price) <= float(s1)):
-        s_response = f"{pair}  =>  {current_price} \t near s1  =>  {s1} \n"
+        s1_response = f"{pair}  =>  {current_price} \t near s1  =>  {s1} \n"
         logger.info(f"{pair}  =>  {s1}")
     elif (float(current_price) >= float(r3)):
-        r_response = f"{pair}  =>  {current_price} \t near r3  =>  {r3} \n"
+        r3_response = f"{pair}  =>  {current_price} \t near r3  =>  {r3} \n"
         logger.info(f"{pair}  near r3 {r3}")
     elif (float(current_price) >= float(r1)):
-        r_response = f"{pair}  =>  {current_price} \t near r1  =>  {r1} \n"
+        r1_response = f"{pair}  =>  {current_price} \t near r1  =>  {r1} \n"
         logger.info(f"{pair} near r1 {r1}")
 
-    return (s_response, r_response)
+    return (s1_response, s3_response, r1_response, r3_response)
 
 
 def priceAlertCallback(context) :
