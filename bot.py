@@ -348,16 +348,16 @@ def check_support_resistance_price(pivot_map, pair) :
     s_response =""
     r_response =""
     if (float(current_price) <= float(s3)):
-        s_response = f"{pair} => {current_price} near s3 =>{s3} \n"
+        s_response = f"{pair}  =>  {current_price} \t near s3  =>  {s3} \n"
         logger.info(f"{pair} near s3 {s3}")
     elif (float(current_price) <= float(s1)):
-        s_response = f"{pair} => {current_price} near s1 =>{s1} \n"
-        logger.info(f"{pair} =>  {s1}")
+        s_response = f"{pair}  =>  {current_price} \t near s1  =>  {s1} \n"
+        logger.info(f"{pair}  =>  {s1}")
     elif (float(current_price) >= float(r3)):
-        r_response = f"{pair} => {current_price} near r3 =>{r3} \n"
-        logger.info(f"{pair} near r3 {r3}")
+        r_response = f"{pair}  =>  {current_price} \t near r3  =>  {r3} \n"
+        logger.info(f"{pair}  near r3 {r3}")
     elif (float(current_price) >= float(r1)):
-        r_response = f"{pair} => {current_price} near r1 =>{r1} \n"
+        r_response = f"{pair}  =>  {current_price} \t near r1  =>  {r1} \n"
         logger.info(f"{pair} near r1 {r1}")
 
     return (s_response, r_response)
