@@ -327,16 +327,16 @@ def price_alert_all_futures(context):
 
         sresponse =""
         if(s1response ==""):
-            s1response = "No USDT pairs are near FibPivot S1"
+            s1response = "<i>No USDT pairs are near FibPivot S1</i>"
         if(s3response ==""):
-            s3response = "No USDT pairs are near FibPivot S3"
+            s3response = "<i>No USDT pairs are near FibPivot S3</i>"
         if(r1response ==""):
-            r1response = "No USDT pairs are near FibPivot R1"
+            r1response = "<i>No USDT pairs are near FibPivot R1</i>"
         if(r3response ==""):
-            r3response = "No USDT pairs are near FibPivot R3"
+            r3response = "<i>No USDT pairs are near FibPivot R3</i>"
             
-        sresponse ="Supports - S1 \n\n"+s1response+"\n\nSupports - S3 \n\n"+s3response
-        rresponse ="Resistances - R1 \n\n"+r1response+"\n\nResistances - R3 \n\n"+r3response
+        sresponse ="<u><b>Supports - S1 </b></u>\n\n"+s1response+"\n\n<u><b>Supports - S3</b></u>\n\n"+s3response
+        rresponse ="<u><b>Resistances - R1</b></u>\n\n"+r1response+"\n\n<u><b>Resistances - R3</b></u>\n\n"+r3response
         logger.info(f"{sresponse}")
         logger.info(f"{rresponse}")
         logger.info("*** Finished to check all Future pairs *****")
@@ -355,16 +355,16 @@ def check_support_resistance_price(pivot_map, pair) :
     r1_response =""
     r3_response =""
     if (float(current_price) <= float(s3)):
-        s3_response = f"{pair}  =>  {current_price} \t near s3  =>  {s3} \n"
+        s3_response = f"{pair}  =>  {current_price}    NEAR  ==> {s3} \n"
         logger.info(f"{pair} near s3 {s3}")
     elif (float(current_price) <= float(s1)):
-        s1_response = f"{pair}  =>  {current_price} \t near s1  =>  {s1} \n"
+        s1_response = f"{pair}  =>  {current_price}    NEAR  ==> {s1} \n"
         logger.info(f"{pair}  =>  {s1}")
     elif (float(current_price) >= float(r3)):
-        r3_response = f"{pair}  =>  {current_price} \t near r3  =>  {r3} \n"
+        r3_response = f"{pair}  =>  {current_price}    NEAR  ==> {r3} \n"
         logger.info(f"{pair}  near r3 {r3}")
     elif (float(current_price) >= float(r1)):
-        r1_response = f"{pair}  =>  {current_price} \t near r1  =>  {r1} \n"
+        r1_response = f"{pair}  =>  {current_price}    NEAR  ==> {r1} \n"
         logger.info(f"{pair} near r1 {r1}")
 
     return (s1_response, s3_response, r1_response, r3_response)
