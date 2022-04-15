@@ -1,10 +1,11 @@
+import datetime
 import functools
 import logging
 import os
 from queue import Empty
 
 from binance.enums import HistoricalKlinesType
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, defaults
+from telegram.ext import Updater, PrefixHandler, CommandHandler, MessageHandler, Filters, defaults
 from binance.client import Client
 from telegram.ext.callbackcontext import CallbackContext
 from datetime import date
@@ -17,140 +18,157 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 
 logger = logging.getLogger(__name__)
 
-list = [
-    "BTCUSDT" ,
-    "ETHUSDT" ,
-    "FTMUSDT" ,
-    "NEARUSDT" ,
-    "ATOMUSDT" ,
-    "DOTUSDT" ,
-    "LUNAUSDT" ,
-    "CRVUSDT" ,
-    "LINKUSDT" ,
-    "ICPUSDT" ,
-    "SOLUSDT" ,
-    "SANDUSDT" ,
-    "ONEUSDT" ,
-    "SUSHIUSDT" ,
-    "BNBUSDT" ,
-    "MATICUSDT" ,
-    "AVAXUSDT" ,
-    "XTZUSDT" ,
-    "ADAUSDT" ,
-    "XRPUSDT" ,
-    "ALGOUSDT" ,
-    "1000SHIBUSDT" ,
-    "RVNUSDT" ,
-    "GALAUSDT" ,
-    "FILUSDT" ,
-    "KEEPUSDT" ,
-    "MANAUSDT" ,
-    "DOGEUSDT" ,
-    "AAVEUSDT" ,
-    "YFIUSDT" ,
-    "ALICEUSDT" ,
-    "LTCUSDT" ,
-    "CHRUSDT" ,
-    "SXPUSDT" ,
-    "SNXUSDT" ,
-    "UNIUSDT" ,
-    "EOSUSDT" ,
-    "AXSUSDT" ,
-    "RUNEUSDT" ,
-    "GTCUSDT" ,
-    "BTTUSDT" ,
-    "ENJUSDT" ,
-    "DYDXUSDT" ,
-    "ARUSDT" ,
-    "VETUSDT" ,
-    "CELRUSDT" ,
-    "XLMUSDT" ,
-    "LRCUSDT" ,
-    "EGLDUSDT" ,
-    "LINAUSDT" ,
-    "KAVAUSDT" ,
-    "COMPUSDT" ,
-    "CELOUSDT" ,
-    "TLMUSDT" ,
-    "THETAUSDT" ,
-    "HBARUSDT" ,
-    "1INCHUSDT" ,
-    "RLCUSDT" ,
-    "BCHUSDT" ,
-    "BANDUSDT" ,
-    "PEOPLEUSDT" ,
-    "BATUSDT" ,
-    "ANTUSDT" ,
-    "DENTUSDT" ,
-    "CHZUSDT" ,
-    "ZECUSDT" ,
-    "TRXUSDT" ,
-    "ETCUSDT" ,
-    "GRTUSDT" ,
-    "ROSEUSDT" ,
-    "HNTUSDT" ,
-    "C98USDT" ,
-    "COTIUSDT" ,
-    "MASKUSDT" ,
-    "XMRUSDT" ,
-    "KSMUSDT" ,
-    "BLZUSDT" ,
-    "RENUSDT" ,
-    "OMGUSDT" ,
-    "SFPUSDT" ,
-    "ANKRUSDT" ,
-    "DODOUSDT" ,
-    "SRMUSDT" ,
-    "CVCUSDT" ,
-    "ENSUSDT" ,
-    "WAVESUSDT" ,
-    "HOTUSDT" ,
-    "RSRUSDT" ,
-    "QTUMUSDT" ,
-    "OCEANUSDT" ,
-    "AKROUSDT" ,
-    "ZILUSDT" ,
-    "ICXUSDT" ,
-    "STORJUSDT" ,
-    "ALPHAUSDT" ,
-    "ZRXUSDT" ,
-    "BALUSDT" ,
-    "TRBUSDT" ,
-    "LPTUSDT" ,
-    "IOTXUSDT" ,
-    "AUDIOUSDT" ,
-    "BAKEUSDT" ,
-    "DASHUSDT" ,
-    "NEOUSDT" ,
-    "RAYUSDT" ,
-    "NUUSDT" ,
-    "ATAUSDT" ,
-    "MKRUSDT" ,
-    "FLMUSDT" ,
-    "UNFIUSDT" ,
-    "BELUSDT" ,
-    "YFIIUSDT" ,
-    "KLAYUSDT" ,
-    "OGNUSDT" ,
-    "REEFUSDT" ,
-    "NKNUSDT" ,
-    "CTKUSDT" ,
-    "IOSTUSDT" ,
-    "ZENUSDT" ,
-    "SKLUSDT" ,
-    "LITUSDT" ,
-    "ARPAUSDT" ,
-    "MTLUSDT" ,
-    "ONTUSDT" ,
-    "CTSIUSDT" ,
-    "BTSUSDT" ,
-    "TOMOUSDT" ,
-    "XEMUSDT" ,
-    "KNCUSDT" ,
-    "DGBUSDT" ,
-    "SCUSDT" ,
-    "STMXUSDT" ,
-]
+list = ["BTCUSDT",
+"ETHUSDT",
+"BCHUSDT",
+"XRPUSDT",
+"EOSUSDT",
+"LTCUSDT",
+"TRXUSDT",
+"ETCUSDT",
+"LINKUSDT",
+"XLMUSDT",
+"ADAUSDT",
+"XMRUSDT",
+"DASHUSDT",
+"ZECUSDT",
+"XTZUSDT",
+"BNBUSDT",
+"ATOMUSDT",
+"ONTUSDT",
+"IOTAUSDT",
+"BATUSDT",
+"VETUSDT",
+"NEOUSDT",
+"QTUMUSDT",
+"IOSTUSDT",
+"THETAUSDT",
+"ALGOUSDT",
+"ZILUSDT",
+"KNCUSDT",
+"ZRXUSDT",
+"COMPUSDT",
+"OMGUSDT",
+"DOGEUSDT",
+"SXPUSDT",
+"KAVAUSDT",
+"BANDUSDT",
+"RLCUSDT",
+"WAVESUSDT",
+"MKRUSDT",
+"SNXUSDT",
+"DOTUSDT",
+"DEFIUSDT",
+"YFIUSDT",
+"BALUSDT",
+"CRVUSDT",
+"TRBUSDT",
+"RUNEUSDT",
+"SUSHIUSDT",
+"SRMUSDT",
+"EGLDUSDT",
+"SOLUSDT",
+"ICXUSDT",
+"STORJUSDT",
+"BLZUSDT",
+"UNIUSDT",
+"AVAXUSDT",
+"FTMUSDT",
+"HNTUSDT",
+"ENJUSDT",
+"FLMUSDT",
+"TOMOUSDT",
+"RENUSDT",
+"KSMUSDT",
+"NEARUSDT",
+"AAVEUSDT",
+"FILUSDT",
+"RSRUSDT",
+"LRCUSDT",
+"MATICUSDT",
+"OCEANUSDT",
+"CVCUSDT",
+"BELUSDT",
+"CTKUSDT",
+"AXSUSDT",
+"ALPHAUSDT",
+"ZENUSDT",
+"SKLUSDT",
+"GRTUSDT",
+"1INCHUSDT",
+"BTCBUSD",
+"AKROUSDT",
+"CHZUSDT",
+"SANDUSDT",
+"ANKRUSDT",
+"LUNAUSDT",
+"BTSUSDT",
+"LITUSDT",
+"UNFIUSDT",
+"DODOUSDT",
+"REEFUSDT",
+"RVNUSDT",
+"SFPUSDT",
+"XEMUSDT",
+"BTCSTUSDT",
+"COTIUSDT",
+"CHRUSDT",
+"MANAUSDT",
+"ALICEUSDT",
+"HBARUSDT",
+"ONEUSDT",
+"LINAUSDT",
+"STMXUSDT",
+"DENTUSDT",
+"CELRUSDT",
+"HOTUSDT",
+"MTLUSDT",
+"OGNUSDT",
+"NKNUSDT",
+"SCUSDT",
+"DGBUSDT",
+"1000SHIBUSDT",
+"ICPUSDT",
+"BAKEUSDT",
+"GTCUSDT",
+"ETHBUSD",
+"BTCDOMUSDT",
+"TLMUSDT",
+"BNBBUSD",
+"ADABUSD",
+"XRPBUSD",
+"IOTXUSDT",
+"DOGEBUSD",
+"AUDIOUSDT",
+"RAYUSDT",
+"C98USDT",
+"MASKUSDT",
+"ATAUSDT",
+"SOLBUSD",
+"FTTBUSD",
+"DYDXUSDT",
+"1000XECUSDT",
+"GALAUSDT",
+"CELOUSDT",
+"ARUSDT",
+"KLAYUSDT",
+"ARPAUSDT",
+"CTSIUSDT",
+"LPTUSDT",
+"ENSUSDT",
+"PEOPLEUSDT",
+"ANTUSDT",
+"ROSEUSDT",
+"DUSKUSDT",
+"FLOWUSDT",
+"IMXUSDT",
+"API3USDT",
+"ANCUSDT",
+"GMTUSDT",
+"APEUSDT",
+"BNXUSDT",
+"WOOUSDT",
+"FTTUSDT"]
 PORT = int(os.environ.get('PORT', '8443'))
 
 # We define command handlers. Error handlers also receive the raised TelegramError object in error.
@@ -160,251 +178,323 @@ def start(update, context):
 
 
 def help(update, context):
+    logger.info(f"here")
     """Sends a message when the command /help is issued."""
-    update.message.reply_text('Commands\n'+ \
-            '/price &lt;Binance Future Pair&gt;    \n       ===> Example /price BTCUSDT \n       ===> Get Current price\n'
-            '/ohlc  &lt;Binance Future Pair&gt;    \n       ===> Example /ohlc BTCUSDT \n       ===> get OHLC\n'
-            '/fibpivot &lt;Binance Future Pair&gt; \n       ===> Example /fibpivot BTCUSDT \n       ===> Get Fib Pivot\n'
-            '/fibpivot_alert ALL                   \n       ===> To generate alerts every 10 mins for pairs near S1 S3 R1 R3 \n'
+    context.bot.send_message(chat_id = update.effective_chat.id, text='Commands\n'
+            '/today ; \n       ===> Show today CPR Signals\n'
+            # '/fibpivot_alert ALL                   \n       ===> To generate alerts every 10 mins for pairs near S1 S3 R1 R3 \n'
     )
+    binance_client = Client()
+    futures_exchange_info = binance_client.futures_exchange_info()  # request info on all futures symbols
+    trading_pairs = [info['symbol'] for info in futures_exchange_info['symbols']]
+    logger.info(f"{trading_pairs}")
 
 
 def echo(update, context):
     """Echos the user message."""
-    update.message.reply_text(update.message.text)
+    context.bot.send_message(chat_id = update.effective_chat.id, text=update.effective_message.text)
 
 
 def error(update, context):
     """Logs Errors caused by Updates."""
     logger.warning('Update "%s" caused error "%s"', update, context.error)
 
-def price(update, context: CallbackContext):
-    try:
-        pair = context.args[0]
-        binance_client = Client()
-        resp = binance_client.futures_symbol_ticker(symbol=pair)
-        logger.info('pair "%s" resp "%s"', pair, resp)
-        update.message.reply_text(f"{resp['symbol']} :  {resp['price']}")
-    except:
-        update.message.reply_text("Invalid Command or symbol pls try /price <Pair>")
+# def price(update, context: CallbackContext):
+#     try:
+#         pair = context.args[0]
+#         binance_client = Client()
+#         resp = binance_client.futures_symbol_ticker(symbol=pair)
+#         logger.info('pair "%s" resp "%s"', pair, resp)
+#         update.message.reply_text(f"{resp['symbol']} :  {resp['price']}")
+#     except:
+#         update.message.reply_text("Invalid Command or symbol pls try /price <Pair>")
 
 def ohlc(update, context: CallbackContext):
     try:
         pair = context.args[0]
         (yday_o, yday_h, yday_l, yday_c) = get_ohlc(pair)
         logger.info('pair :"%s"  o "%s" h "%s"  l "%s"  c "%s"', pair, yday_o, yday_h, yday_l, yday_c)
-        update.message.reply_text(f"Yday OHLC for {pair} ===>  \n O => {yday_o} \n H =>{yday_h} \n L => {yday_l} \n C => {yday_c}")
+        # update.message.reply_text(f"Yday OHLC for {pair} ===>  \n O => {yday_o} \n H =>{yday_h} \n L => {yday_l} \n C => {yday_c}")
     except Exception as exception:
         logger.error(exception)
-        update.message.reply_text("Invalid Command or symbol pls try /ohlc <Pair>")
+        # update.message.reply_text("Invalid Command or symbol pls try /ohlc <Pair>")
 
-def fibpivot(update, context: CallbackContext):
-    try:
-        pair = context.args[0]
-        (r3, r2, r1, p, s1, s2, s3) = get_fib_pivots(pair)
-        logger.info('pair :"%s"  r3 "%s" r2 "%s"  r1 "%s"  P "%s" S1 "%s" S2 "%s" S3 "%s"', pair, r3, r2, r1, p, s1, s2 , s3)
-        update.message.reply_text(f"Fib Pivot for {pair} ===>\n"+\
-            f" R3 (+0.618) => {r3} \n R2 (+0.5    ) => {r2} \n R1 (+0.382) => {r1} \n P  (HLC3   ) => {p} \n S1 (-0.382) => {s1} \n S2 (-0.5    ) => {s2} \n S3 (-0.618) => {s3} \n")
-    except Exception as exception:
-        logger.exception(exception)
-        update.message.reply_text("Invalid Command or symbol pls try /fibpivot <Pair>")
+# def fibpivot(update, context: CallbackContext):
+#     try:
+#         pair = context.args[0]
+#         (r3, r2, r1, p, s1, s2, s3) = get_fib_pivots(pair)
+#         logger.info('pair :"%s"  r3 "%s" r2 "%s"  r1 "%s"  P "%s" S1 "%s" S2 "%s" S3 "%s"', pair, r3, r2, r1, p, s1, s2 , s3)
+#         update.message.reply_text(f"Fib Pivot for {pair} ===>\n"+\
+#             f" R3 (+0.618) => {r3} \n R2 (+0.5    ) => {r2} \n R1 (+0.382) => {r1} \n P  (HLC3   ) => {p} \n S1 (-0.382) => {s1} \n S2 (-0.5    ) => {s2} \n S3 (-0.618) => {s3} \n")
+#     except Exception as exception:
+#         logger.exception(exception)
+#         update.message.reply_text("Invalid Command or symbol pls try /fibpivot <Pair>")
 
-def get_fib_pivots(pair):
-    (yday_o, yday_h, yday_l, yday_c) = get_ohlc(pair)
-    range = (yday_h - yday_l)
-    p = _round((yday_h + yday_l +yday_c) /3)
-    r1 = _round(p + (0.382 * range))
-    r2 = _round(p + (0.5 * range))
-    r3 = _round(p + (0.618 * range))
-    s1 = _round(p - (0.382 * range))
-    s2 = _round(p - (0.5 * range))
-    s3 = _round(p - (0.618 * range))
-    return (r3, r2, r1, p, s1, s2, s3)
+def get_cpr(o, h, l, c):
+    p = _round((h+l+c) /3)
+    hl2 = _round((h+l) /2) 
+
+    bc = 0.0
+    tc = 0.0
+    if(hl2 > p):
+        tc = hl2
+        bc = p - (tc-p)
+    else:
+        bc = hl2
+        tc = p + (p - bc)
+
+    return(tc, p, bc)
+
+def get_cprs(pair):
+    (yday_o, yday_h, yday_l, yday_c) = get_ohlc(pair, 1)
+    if(yday_o is not None):
+        (tday_tc, tday_p, tday_bc) = get_cpr(yday_o, yday_h, yday_l, yday_c)
+
+        (db_yday_o, db_yday_h, db_yday_l, db_yday_c) = get_ohlc(pair, 2)
+        (yday_tc, yday_p, yday_bc) = get_cpr(db_yday_o, db_yday_h, db_yday_l, db_yday_c)
+
+        return (yday_tc, yday_p, yday_bc, tday_tc, tday_p, tday_bc, yday_c)
+    else:
+        return (None, None, None, None, None ,None, None)
+    # r10 = _round(p + (0.37 * range))
+    # r1 = _round(p + (0.382 * range))
+    # r11 = _round(p + (0.4 * range))
+
+    # r20 = _round(p + (0.6 * range))
+    # r2 = _round(p + (0.618 * range))
+    # r21 = _round(p + (0.625 * range))
+    
+    # r30 = _round(p + (0.8 * range))
+    # r3 = _round(p + (1 * range))
+    # r31 = _round(p + (1.15 * range))
+    
+    # r40 = _round(p + (1.6 * range))
+    # r4 = _round(p + (1.618 * range))
+    # r41 = _round(p + (1.625 * range))
+
+
+    # s10 = _round(p - (0.37 * range))
+    # s1 = _round(p - (0.382 * range))
+    # s11 = _round(p - (0.4 * range))
+    
+    # s20 = _round(p - (0.6 * range))
+    # s2 = _round(p - (0.618 * range))
+    # s21 = _round(p - (0.625 * range))
+    
+    # s30 = _round(p - (0.8 * range))
+    # s3 = _round(p - (1 * range))
+    # s31 = _round(p - (1.15 * range))
+
+    # s40 = _round(p - (1.6 * range))
+    # s4 = _round(p - (1.618 * range))
+    # s41 = _round(p - (1.625 * range))
+
+
+    # return (p, tc, bc, p1, tc1, bc1)
 
 def _round(val):
     if (val > 1):
         return round(val, 3)
     elif(val<1):
         return round(val, 5)
-def get_ohlc(pair):
-    binance_client = Client()
-    yesterday = date.today() - timedelta(days = 1)
-    start_str = yesterday.strftime('%d %B %Y')
-    resp = binance_client.get_historical_klines(symbol=pair, interval=Client.KLINE_INTERVAL_1DAY, start_str=start_str, limit=1, klines_type=HistoricalKlinesType.FUTURES)
-    # logger.info(f"{resp}")
-    yday = resp[0]
-    yday_o = float(yday[1])
-    yday_h = float(yday[2])
-    yday_l = float(yday[3])
-    yday_c = float(yday[4])
-    return (yday_o, yday_h, yday_l, yday_c)
-
-def price_alert(update, context):
-    if len(context.args) > 2:
-        crypto = context.args[0].upper()
-        sign = context.args[1]
-        price = context.args[2]
-        logger.info(f"{crypto} {sign} {price}")
-        context.job_queue.run_repeating(priceAlertCallback, interval=15, first=5, context=[crypto, sign, price, None, update.message.chat_id])
-        
+def get_ohlc(pair, days_before):
+    try:
         binance_client = Client()
-        resp = binance_client.futures_symbol_ticker(symbol=crypto)
-        response = f"⏳ I will send you a message when the price of {crypto} reaches {price}, \n"
-        response += f"the current price of {crypto} is {resp['price']}"
-    else:
-        response = '⚠️ Please provide a crypto code and a price value: \n<i>/price_alert {crypto code} {&gt; / &lt;} {price}</i>'
+        yesterday = date.today() - timedelta(days = days_before)
+        start_str = yesterday.strftime('%d %B %Y')
+        resp = binance_client.get_historical_klines(symbol=pair, interval=Client.KLINE_INTERVAL_1DAY, start_str=start_str, limit=1, klines_type=HistoricalKlinesType.FUTURES)
+        # logger.info(f"{start_str} -- {resp}")
+        yday = resp[0]
+        yday_o = float(yday[1])
+        yday_h = float(yday[2])
+        yday_l = float(yday[3])
+        yday_c = float(yday[4])
+        return (yday_o, yday_h, yday_l, yday_c)
+    except Exception as exception:
+        logger.error(f"Some error {exception}")
+        return (None, None, None, None)
+
+# def price_alert(update, context):
+#     if len(context.args) > 2:
+#         crypto = context.args[0].upper()
+#         sign = context.args[1]
+#         price = context.args[2]
+#         logger.info(f"{crypto} {sign} {price}")
+#         context.job_queue.run_repeating(priceAlertCallback, interval=15, first=5, context=[crypto, sign, price, None, update.message.chat_id])
+        
+#         binance_client = Client()
+#         resp = binance_client.futures_symbol_ticker(symbol=crypto)
+#         response = f"⏳ I will send you a message when the price of {crypto} reaches {price}, \n"
+#         response += f"the current price of {crypto} is {resp['price']}"
+#     else:
+#         response = '⚠️ Please provide a crypto code and a price value: \n<i>/price_alert {crypto code} {&gt; / &lt;} {price}</i>'
     
-    context.bot.send_message(chat_id=update.effective_chat.id, text=response)
+#     context.bot.send_message(chat_id=update.effective_chat.id, text=response)
 
-def fibpivot_single_alert(update, context):
-    pair = context.args[0].upper()
-    context.bot.send_message(chat_id=update.effective_chat.id, text="Loading Pivots pls wait for few minutes.....")
-    context.job_queue.run_once(update_pivots, when=5, context=[update.message.chat_id, [pair]])
+# def fibpivot_single_alert(update, context):
+#     pair = context.args[0].upper()
+#     context.bot.send_message(chat_id=update.effective_chat.id, text="Loading Pivots pls wait for few minutes.....")
+#     context.job_queue.run_once(update_pivots, when=5, context=[update.message.chat_id, [pair]])
 
-def fibpivot_alert(update, context):
+# def fibpivot_alert(update, context):
 
-    if(context.args[0].upper()=="ALL") :
-        fibpivot_all_alert(update, context)
-    else :
-        fibpivot_single_alert(update, context)
+#     if(context.args[0].upper()=="ALL") :
+#         fibpivot_all_alert(update, context)
+#     else :
+#         fibpivot_single_alert(update, context)
 
-pivot_map={}
-def fibpivot_all_alert(update, context):
-    context.bot.send_message(chat_id=update.effective_chat.id, text="Loading Pivots pls wait for few minutes.....")
-    context.job_queue.run_once(update_pivots, when=5, context=[update.message.chat_id, list])
     
-
 max_workers=10
+# poll=180 # secs
+pivot_map={}
+def today_signals(update, context):
+    # if len(context.args)==2 :
+    #     poll = int(context.args[1])
+    # else:
+    poll = 5
+
+    logger.info(f"######################{poll}")
+    context.bot.send_message(chat_id=update.effective_chat.id, text="Loading Pivots pls wait for few minutes.....")
+    # context.job_queue.run_daily(update_pivots, time=datetime.time(hour=1, minute=0), context=[update.message.chat_id, list])
+    context.job_queue.run_once(update_pivots, when=5, context=[update.message.chat_id, list,poll])
+    
+    
 
     
 def update_pivots(context):
     chat_id = context.job.context[0]
     list = context.job.context[1]
-    logger.info(f"Loading Fib Pivots")
+    _poll = context.job.context[2]
+    logger.info(f"Loading Fib Pivots poll: {_poll}")
     pivot_map.clear()
     count = 0
     total = len(list)
     with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
-        for pair, (r3, r2, r1, p, s1, s2, s3) in zip(list, executor.map(get_fib_pivots, list)):
-            pivot_map[pair]= (r3, r2, r1, p, s1, s2, s3)
-            count=count+1
-            logger.info(f"{count} / {total} ------> {pair} updated")
+        for pair, (yday_tc, yday_p, yday_bc, tday_tc, tday_p, tday_bc, yday_c) in zip(list, executor.map(get_cprs, list)):
+            if(yday_tc is not None):
+                pivot_map[pair]= (yday_tc, yday_p, yday_bc, tday_tc, tday_p, tday_bc, yday_c)
+                count=count+1
+                logger.debug(f"{count} / {total} ------> {pair} updated")
+            else:
+                logger.debug(f"ignored ------> {pair}")
 
-    logger.info(f"Loaded Fib Pivots")
-    response = "⏳ Fib Pivots Updated \n I will send you a message every 10 mins with list of all Future Pairs near fib pivot S1 or S3 or R1 or R3"
-    
-    context.job_queue.run_repeating(price_alert_all_futures, interval=600, first=5, context=[pivot_map, chat_id, list])
+    logger.info(f"Loaded CPR")
+    # response = f"⏳CPR  Updated \n"
+    context.job_queue.run_once(run_filters, when=5, context=[pivot_map, chat_id, list])
 
     context.bot.send_message(chat_id=chat_id, text=response)
 
-def price_alert_all_futures(context):
+def run_filters(context):
     logger.info("*** Starting to check all Future pairs *****")
     pivot_map = context.job.context[0]
     chat_id = context.job.context[1]
     list = context.job.context[2]
-  
+    descending_list= []
+    ascending_list= []
+    narrow_list= []
+    inside_cpr_list= []
     count = 0
     total = len(list)
-    partial_check_price = functools.partial(check_support_resistance_price, pivot_map)
+    partial_check_price = functools.partial(filter, pivot_map)
 
     with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
 
-        s1response =""
-        s3response =""
-        r1response =""
-        r3response =""
-        for pair, (s1_response, s3_response, r1_response, r3_response) in zip(list, executor.map(partial_check_price, list)):
+        for pair, (ascending, descending, inside_cpr, narrow_cpr) in zip(list, executor.map(partial_check_price, list)):
             count=count+1
-            logger.info(f"{count} / {total} ------> {pair} => \n {s1_response} {s3_response} {r1_response} {r3_response}")
-            if(s1_response != "") :
-                s1response +=s1_response
-            if(s3_response != "") :
-                s3response +=s3_response
-            if(r1_response != "") :
-                r1response +=r1_response
-            if(r3_response != "") :
-                r3response +=r3_response
-
-        sresponse =""
-        if(s1response ==""):
-            s1response = "<i>No USDT pairs are near FibPivot S1</i>"
-        if(s3response ==""):
-            s3response = "<i>No USDT pairs are near FibPivot S3</i>"
-        if(r1response ==""):
-            r1response = "<i>No USDT pairs are near FibPivot R1</i>"
-        if(r3response ==""):
-            r3response = "<i>No USDT pairs are near FibPivot R3</i>"
             
-        sresponse ="<u><b>Supports - S1 </b></u>\n\n"+s1response+"\n\n<u><b>Supports - S3</b></u>\n\n"+s3response
-        rresponse ="<u><b>Resistances - R1</b></u>\n\n"+r1response+"\n\n<u><b>Resistances - R3</b></u>\n\n"+r3response
-        logger.info(f"{sresponse}")
-        logger.info(f"{rresponse}")
+                
+            if(ascending) :
+                ascending_list.append(pair)
+            
+            if(descending):
+                descending_list.append(pair)
+
+            if(inside_cpr):
+                inside_cpr_list.append(pair)
+            
+            if(narrow_cpr):
+                narrow_list.append(pair)
+       
+        logger.info(f"\nShort List***** \n{descending_list}")
+        context.bot.send_message(chat_id = chat_id, text=f"\nDescending CPR List***** \n{descending_list}")
+
+        logger.info(f"\n\nLong List***** \n{ascending_list}")
+        context.bot.send_message(chat_id = chat_id, text=f"\nAscending CPR List***** \n{ascending_list}")
+
+        logger.info(f"\nInside CPR List***** \n{inside_cpr_list}")
+        context.bot.send_message(chat_id = chat_id, text=f"\nInside CPR List***** \n{inside_cpr_list}")
+
+        logger.info(f"\nNarrow CPR List***** \n{narrow_list}")
+        context.bot.send_message(chat_id = chat_id, text=f"\nNarrow CPR List***** \n{narrow_list}")
+
         logger.info("*** Finished to check all Future pairs *****")
-        context.bot.send_message(chat_id=chat_id, text=sresponse)
-        context.bot.send_message(chat_id=chat_id, text=rresponse)
+        # context.bot.send_message(chat_id=chat_id, text=sresponse)
 
        
-def check_support_resistance_price(pivot_map, pair) :
-    binance_client = Client()
-    (r3, r2, r1, p, s1, s2, s3) = pivot_map.get(pair)
-    resp = binance_client.futures_symbol_ticker(symbol=pair)
-    current_price = resp['price']
-    # logger.info(f"{pair} - {s1}  {s3}  {current_price}")
-    s1_response =""
-    s3_response =""
-    r1_response =""
-    r3_response =""
-    if (float(current_price) <= float(s3)):
-        s3_response = f"{pair}  =>  {current_price}    NEAR  ==> {s3} \n"
-        logger.info(f"{pair} near s3 {s3}")
-    elif (float(current_price) <= float(s1)):
-        s1_response = f"{pair}  =>  {current_price}    NEAR  ==> {s1} \n"
-        logger.info(f"{pair}  =>  {s1}")
-    elif (float(current_price) >= float(r3)):
-        r3_response = f"{pair}  =>  {current_price}    NEAR  ==> {r3} \n"
-        logger.info(f"{pair}  near r3 {r3}")
-    elif (float(current_price) >= float(r1)):
-        r1_response = f"{pair}  =>  {current_price}    NEAR  ==> {r1} \n"
-        logger.info(f"{pair} near r1 {r1}")
+def filter(pivot_map, pair) :
 
-    return (s1_response, s3_response, r1_response, r3_response)
+    try:
+        
+        (yday_tc, yday_p, yday_bc, tday_tc, tday_p, tday_bc, yday_c) = pivot_map.get(pair)
+      
+        narrow_cpr = (tday_tc - tday_bc) < (yday_c * 0.001)
+        ascending=False
+        descending = False
+        inside = False
+
+        if(tday_bc > yday_tc): #ascending
+            ascending = True
+        elif(tday_tc < yday_bc): #descending
+            descending = True
+        elif(tday_tc <= yday_tc and tday_bc >= yday_bc):
+            inside = True
+        
+        logger.info(f"{pair} =>  {ascending}, {descending}, {inside}, {narrow_cpr} {(tday_tc - tday_bc)} { yday_c * 0.001}")
 
 
-def priceAlertCallback(context) :
-    pair = context.job.context[0]
-    sign = context.job.context[1]
-    price = context.job.context[2]
-    price1 = context.job.context[3]
-    chat_id = context.job.context[4]
+    except Exception as exception:
+        logger.error(f"Some error {exception}")
+    return (ascending, descending, inside, narrow_cpr)
 
-    if(price1 is None) :
-        price1 = price
+    
+    # return (s2_response, s3_response, s4_response, r2_response, r3_response, r4_response)
 
 
-    send = False
-    binance_client = Client()
-    resp = binance_client.futures_symbol_ticker(symbol=pair)
-    current_price = resp['price']
+# def priceAlertCallback(context) :
+#     pair = context.job.context[0]
+#     sign = context.job.context[1]
+#     price = context.job.context[2]
+#     price1 = context.job.context[3]
+#     chat_id = context.job.context[4]
 
-    if sign == '<':
-        if (float(current_price) <= float(price)) or (float(current_price) <= float(price1)):
-            send = True
-    else:
-        if (float(current_price) >= float(price))  or(float(current_price) >= float(price1)):
-            send = True
+#     if(price1 is None) :
+#         price1 = price
 
-    if send:
-        response = f'👋 {pair} has surpassed {price} and has just reached <b>{current_price}</b>!'
-        context.job.schedule_removal()
-        context.bot.send_message(chat_id=chat_id, text=response)
+
+#     send = False
+#     binance_client = Client()
+#     resp = binance_client.futures_symbol_ticker(symbol=pair)
+#     current_price = resp['price']
+
+#     if sign == '<':
+#         if (float(current_price) <= float(price)) or (float(current_price) <= float(price1)):
+#             send = True
+#     else:
+#         if (float(current_price) >= float(price))  or(float(current_price) >= float(price1)):
+#             send = True
+
+#     if send:
+#         response = f'👋 {pair} has surpassed {price} and has just reached <b>{current_price}</b>!'
+#         context.job.schedule_removal()
+#         context.bot.send_message(chat_id=chat_id, text=response)
 
 def main():
     """Starts the bot."""
     # Creates the Updater and pass it your bot's token.
     # Make sure to set use_context=True to use the new context based callbacks
     # Post version 12 this will no longer be necessary
-    TOKEN = '5031744251:AAFlmNnOtvmEwfXraozieNRKZoKuZlWEZSs'#enter your token here
-    APP_NAME='https://dailyfibpivotsignals.herokuapp.com/'#Edit the heroku app-name
+    TOKEN = '5332543721:AAFaa6R56v4vwXPunxWa42AP0JGxHsh4ELI'#enter your token here
+    # APP_NAME='https://dailyfibpivotsignals.herokuapp.com/'#Edit the heroku app-name
     
     updater = Updater(token=TOKEN, defaults=defaults.Defaults(parse_mode=ParseMode.HTML))
 
@@ -414,15 +504,16 @@ def main():
     # on different commands - answer in Telegram
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("help", help))
-    dp.add_handler(CommandHandler("price", price))
-    dp.add_handler(CommandHandler("ohlc", ohlc))
-    dp.add_handler(CommandHandler("fibpivot", fibpivot))
-    
-    dp.add_handler(CommandHandler("price_alert", price_alert))
-    dp.add_handler(CommandHandler("fibpivot_alert", fibpivot_alert))
+    # dp.add_handler(CommandHandler("price", price))
+    # dp.add_handler(CommandHandler("ohlc", ohlc))
+    # dp.add_handler(CommandHandler("fibpivot", fibpivot))
+        
+    # dp.add_handler(CommandHandler("price_alert", price_alert))
+    # dp.add_handler(CommandHandler("fibpivot_alert", fibpivot_alert))
+    dp.add_handler(CommandHandler("today", today_signals))
 
     # on noncommand i.e message - echo the message on Telegram
-    dp.add_handler(MessageHandler(Filters.text, echo))
+    # dp.add_handler(MessageHandler(Filters.text, echo))
 
     # log all errors
     dp.add_error_handler(error)
