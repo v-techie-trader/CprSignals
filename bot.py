@@ -19,9 +19,38 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
                     level=logging.INFO)
 
 logger = logging.getLogger(__name__)
-
-list = [
+vlist = [
+    "ALGOUSDT", 
+    "HNTUSDT",
+    "BAKEUSDT",
+    "ALICEUSDT", 
+    "BATUSDT",
+    "DOGEUSDT",
+    "STORJUSDT",
+    "SANDUSDT",
+    "SKLUSDT",
+    "KSMUSDT",
+    "TRBUSDT",
+    "MANAUSDT",
+    "COMPUSDT",
+    "GRTUSDT",
+    "BALUSDT",
+    "ENJUSDT",
+    "MKRUSDT",
+    "OMGUSDT",
+    "ICXUSDT",
+    "BANDUSDT",
+    "SXPUSDT",
+    "DYDXUSDT",
+    "ETHUSDT",
+    # "SRMUSDT",
+    "GALAUSDT",
+    "NEARUSDT",
     "BTCUSDT",
+    "BNBUSDT"
+]
+list = [
+"BTCUSDT",
 "ETHUSDT",
 "BCHUSDT",
 "XRPUSDT",
@@ -61,7 +90,6 @@ list = [
 "MKRUSDT",
 "SNXUSDT",
 "DOTUSDT",
-"DEFIUSDT",
 "YFIUSDT",
 "BALUSDT",
 "CRVUSDT",
@@ -90,7 +118,7 @@ list = [
 "LRCUSDT",
 "MATICUSDT",
 "OCEANUSDT",
-"CVCUSDT",
+# "CVCUSDT",
 "BELUSDT",
 "CTKUSDT",
 "AXSUSDT",
@@ -99,21 +127,17 @@ list = [
 "SKLUSDT",
 "GRTUSDT",
 "1INCHUSDT",
-
-"AKROUSDT",
 "CHZUSDT",
 "SANDUSDT",
 "ANKRUSDT",
-"LUNAUSDT",
 "BTSUSDT",
 "LITUSDT",
 "UNFIUSDT",
-"DODOUSDT",
 "REEFUSDT",
 "RVNUSDT",
 "SFPUSDT",
 "XEMUSDT",
-"BTCSTUSDT",
+# "BTCSTUSDT",
 "COTIUSDT",
 "CHRUSDT",
 "MANAUSDT",
@@ -130,11 +154,9 @@ list = [
 "NKNUSDT",
 "SCUSDT",
 "DGBUSDT",
-"1000SHIBUSDT",
 "ICPUSDT",
 "BAKEUSDT",
 "GTCUSDT",
-"BTCDOMUSDT",
 "TLMUSDT",
 "IOTXUSDT",
 "AUDIOUSDT",
@@ -143,7 +165,6 @@ list = [
 "MASKUSDT",
 "ATAUSDT",
 "DYDXUSDT",
-"1000XECUSDT",
 "GALAUSDT",
 "CELOUSDT",
 "ARUSDT",
@@ -158,13 +179,16 @@ list = [
 "DUSKUSDT",
 "FLOWUSDT",
 "IMXUSDT",
-"API3USDT",
-"ANCUSDT",
 "GMTUSDT",
 "APEUSDT",
 "BNXUSDT",
 "WOOUSDT",
-"FTTUSDT"]
+# "FTTUSDT",
+"JASMYUSDT",
+"DARUSDT",
+"GALUSDT",
+"OPUSDT"
+]
 PORT = int(os.environ.get('PORT', '8443'))
 
 # We define command handlers. Error handlers also receive the raised TelegramError object in error.
@@ -200,7 +224,7 @@ def error(update, context):
 
 
 def _round(val):
-    if (val > 1):
+    if (val >= 1):
         return round(val, 3)
     elif(val<1):
         return round(val, 5)
@@ -224,7 +248,7 @@ def get_ohlc(pair, type, interval, start_str):
 
         return (yday_o, yday_h, yday_l, yday_c, db_yday_o, db_yday_h, db_yday_l,db_yday_c)
     except Exception as exception:
-        logger.error(f"Some error {exception}")
+        logger.error(f"*********{pair} Some error {exception}")
         traceback.print_exc()
         return (None, None, None, None, None, None, None, None)
 
@@ -251,35 +275,74 @@ def get_cprs(type, interval, start_str, pair):
     if(yday_o is not None):
         (tday_tc, tday_p, tday_bc) = get_cpr(yday_o, yday_h, yday_l, yday_c)
         (yday_tc, yday_p, yday_bc) = get_cpr(db_yday_o, db_yday_h, db_yday_l, db_yday_c)
+        (H3, L3, H4, L4, H5, L5, H6, L6) = get_camarilla(yday_o, yday_h, yday_l, yday_c)
 
-        return (yday_tc, yday_p, yday_bc, tday_tc, tday_p, tday_bc, yday_c)
+        _pivots= {
+            "yday_tc" : yday_tc,
+            "yday_p" : yday_p,
+            "yday_bc" : yday_bc,
+            "tday_tc" : tday_tc,
+            "tday_p" : tday_p,
+            "tday_bc" : tday_bc,
+            "yday_c" : yday_c,
+            "H3" : H3,
+            "L3" : L3,
+            "H4" : H4,
+            "L4" : L4,
+            "H5" : H5,
+            "L5" : L5,
+            "H6" : H6,
+            "L6" : L6,
+        }
+        # logger.info(f"Loaded {pair} {yday_o}, {yday_h}, {yday_l}, {yday_c} {H3} {L3} {tday_tc} {tday_bc}")
+        return _pivots
+        
     else:
-        return (None, None, None, None, None ,None, None)
+        return {}
+  
+
+
+def get_camarilla(yday_o, yday_h, yday_l, yday_c):
+    if(yday_o is not None):
+        yday_range = yday_h - yday_l
+        H3 = yday_c + yday_range * (1.1/4)
+        L3 = yday_c - yday_range * (1.1/4)
+        H4 = yday_c + yday_range * (1.1/2)
+        L4 = yday_c - yday_range * (1.1/2)
+        H5 = yday_h/yday_l + yday_c
+        L5 = yday_c - (H5 - yday_c)
+        H6 = H5 + 1.168 * (H5 - H4)
+        L6 = yday_c - (H6 - yday_c)
+        return (H3, L3, H4, L4, H5, L5, H6, L6)
+    else:
+        return (None, None, None, None, None ,None, None, None)
   
 
 max_workers=10
 # poll=180 # secs
 pivot_map={}
 def today_signals(update, context):
+ 
     poll = 1
     dat = date.today() - timedelta(days=2)
     interval = Client.KLINE_INTERVAL_1DAY
     start_str = dat.strftime('%d %B %Y')
     
+    
     context.bot.send_message(chat_id=update.effective_chat.id, text=f"Loading Daily Pivots from {start_str} pls wait for few minutes.....")
     # context.job_queue.run_daily(update_pivots, time=datetime.time(hour=1, minute=0), context=[update.message.chat_id, list])
-    context.job_queue.run_once(update_pivots, when=poll, context=[update.message.chat_id, list, poll, "day", interval, start_str])
+    context.job_queue.run_once(update_pivots, when=poll, context=[update.message.chat_id, list, poll, "day", interval, start_str, context.args])
     
     
 def week_signals(update, context):
     poll = 1
 
     interval = Client.KLINE_INTERVAL_1WEEK
-    dat = date.today() - timedelta(days=date.today().weekday()+1) + relativedelta(weeks=-2)
+    dat = date.today() + relativedelta(weeks=-3, weekday=MO(0))
     start_str = dat.strftime('%d %B %Y')
     context.bot.send_message(chat_id=update.effective_chat.id, text=f"Loading Weekly Pivots from {start_str} pls wait for few minutes.....")
     # context.job_queue.run_daily(update_pivots, time=datetime.time(hour=1, minute=0), context=[update.message.chat_id, list])
-    context.job_queue.run_once(update_pivots, when=poll, context=[update.message.chat_id, list, poll, "week",interval, start_str])
+    context.job_queue.run_once(update_pivots, when=poll, context=[update.message.chat_id, list, poll, "week",interval, start_str, context.args])
     
    
 def month_signals(update, context):
@@ -289,7 +352,7 @@ def month_signals(update, context):
     start_str = dat.strftime('%d %B %Y')
     context.bot.send_message(chat_id=update.effective_chat.id, text=f"Loading Monthly Pivots from {start_str} pls wait for few minutes.....")
     # context.job_queue.run_daily(update_pivots, time=datetime.time(hour=1, minute=0), context=[update.message.chat_id, list])
-    context.job_queue.run_once(update_pivots, when=poll, context=[update.message.chat_id, list, poll, "month", interval, start_str])
+    context.job_queue.run_once(update_pivots, when=poll, context=[update.message.chat_id, list, poll, "month", interval, start_str, context.args])
     
 def update_pivots(context):
     chat_id = context.job.context[0]
@@ -298,25 +361,27 @@ def update_pivots(context):
     type = context.job.context[3]
     interval = context.job.context[4]
     start_str = context.job.context[5]
+    args = context.job.context[6]
     logger.info(f"Loading Pivots poll: {_poll}")
     pivot_map.clear()
     count = 0
     total = len(list)
     partial_check_price = functools.partial(get_cprs, type, interval, start_str)
     with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
-        for pair, (yday_tc, yday_p, yday_bc, tday_tc, tday_p, tday_bc, yday_c) in zip(list, executor.map(partial_check_price, list)):
-            if(yday_tc is not None):
-                pivot_map[pair]= (yday_tc, yday_p, yday_bc, tday_tc, tday_p, tday_bc, yday_c)
+        # for pair, (yday_tc, yday_p, yday_bc, tday_tc, tday_p, tday_bc, yday_c) in zip(list, executor.map(partial_check_price, list)):
+        for pair, _pivots in zip(list, executor.map(partial_check_price, list)):
+            if("yday_tc" in _pivots):
+                pivot_map[pair]= _pivots
                 count=count+1
                 logger.debug(f"{count} / {total} ------> {pair} updated")
             else:
                 logger.debug(f"ignored ------> {pair}")
 
     logger.info(f"Loaded CPR")
-    run_filters(context, pivot_map, chat_id, list, type)
+    run_filters(context, pivot_map, chat_id, list, type, args)
 
 
-def run_filters(context, pivot_map, chat_id, list, type):
+def run_filters(context, pivot_map, chat_id, list, type, args):
     logger.info("*** Starting to check all Future pairs *****")
     descending_list= []
     ascending_list= []
@@ -325,32 +390,59 @@ def run_filters(context, pivot_map, chat_id, list, type):
     long_list=[]
     short_list=[]
     just_narrow_list=[]
+    bullish_gpz_list =[]
+    bearish_gpz_list =[]
+    filtered_bullish_gpz_list =[]
+    filtered_bearish_gpz_list =[]
     count = 0
     total = len(list)
     partial_check_price = functools.partial(filter,  pivot_map, type)
 
     with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
-
-        for pair, (ascending, descending, inside_cpr, narrow_cpr) in zip(list, executor.map(partial_check_price, list)):
+        
+        isvidhya= (len(args) == 1) and (args[0]=="vidhya")
+        for pair, (ascending, descending, oascending, odescending, inside_cpr, narrow_cpr, bearish_gpz, bullish_gpz) in zip(list, executor.map(partial_check_price, list)):
             count=count+1
+            short=False
+            long = False
             
-                
-            if(ascending) :
-                ascending_list.append(pair)
+            # if(ascending or oascending) :
+            #     ascending_list.append(pair)
             
-            if(descending):
-                descending_list.append(pair)
+            # if(descending or odescending):
+            #     descending_list.append(pair)
 
-            if(inside_cpr):
+            if(not isvidhya and inside_cpr) or (isvidhya and inside_cpr and pair in vlist):
                 inside_cpr_list.append(pair)
             
-            if(narrow_cpr):
+            if(not isvidhya and narrow_cpr) or (isvidhya and narrow_cpr and pair in vlist):
                 narrow_list.append(pair)
-                if(inside_cpr):
+                if(inside_cpr or ascending or oascending):
                     long_list.append(pair)
+                elif(inside_cpr or descending or odescending):
+                    short_list.append(pair)
                 else:
                     just_narrow_list.append(pair)
-       
+            
+            if(not isvidhya and bearish_gpz) or (isvidhya and bearish_gpz and pair in vlist):
+                bearish_gpz_list.append(pair)
+
+            if(not isvidhya and bullish_gpz) or (isvidhya and bullish_gpz and pair in vlist):
+                bullish_gpz_list.append(pair)
+
+            if((descending or odescending or inside_cpr or narrow_cpr) and bearish_gpz):
+                short = True
+
+            
+            if((ascending or oascending or inside_cpr or narrow_cpr) and bullish_gpz):
+                long = True
+
+            if(not isvidhya and short) or (isvidhya and short and pair in vlist):
+                filtered_bearish_gpz_list.append(pair)
+
+            if(not isvidhya and long) or (isvidhya and long and pair in vlist):
+                filtered_bullish_gpz_list.append(pair)
+            
         # logger.info(f"\nShort List***** \n{descending_list}")
         # context.bot.send_message(chat_id = chat_id, text=f"\n{type} *****Descending CPR List***** \n{descending_list}")
 
@@ -364,16 +456,29 @@ def run_filters(context, pivot_map, chat_id, list, type):
         context.bot.send_message(chat_id = chat_id, text=f"\n{type} *****Narrow CPR List***** \n{narrow_list}")
 
         logger.info(f"\nHigh Probable LongList***** \n{long_list}")
-        context.bot.send_message(chat_id = chat_id, text=f"\n{type} *****High Probable LongList***** \n{long_list}")
+        context.bot.send_message(chat_id = chat_id, text=f"\n{type} *****High Probable LongList (narrow + (hv/ohv/inside_cpr))***** \n{long_list}")
 
-
-        # logger.info(f"\nHigh Probable Short List***** \n{long_list}")
-        # context.bot.send_message(chat_id = chat_id, text=f"\n{type} *****High Probable Short List***** \n{short_list}")
+        logger.info(f"\nHigh Probable Short List***** \n{short_list}")
+        context.bot.send_message(chat_id = chat_id, text=f"\n{type} *****High Probable Short List (narrow + (lv/olv/inside_cpr))***** \n{short_list}")
         
         
-        logger.info(f"\nOther Narrow List***** \n{just_narrow_list}")
-        context.bot.send_message(chat_id = chat_id, text=f"\n{type} *****Other Narrow List***** \n{just_narrow_list}")
+        # logger.info(f"\nOther Narrow List***** \n{just_narrow_list}")
+        # context.bot.send_message(chat_id = chat_id, text=f"\n{type} *****Other Narrow List***** \n{just_narrow_list}")
 
+
+        logger.info(f"\nFiltered Bearish Golden Pivot Zone (GPZ)***** \n{filtered_bearish_gpz_list}")
+        context.bot.send_message(chat_id = chat_id, text=f"\n{type} *****Filtered Bearish Golden Pivot Zone (GPZ)***** \n{filtered_bearish_gpz_list}")
+
+        logger.info(f"\nFiltered  Bullish Golden Pivot Zone (GPZ)***** \n{filtered_bullish_gpz_list}")
+        context.bot.send_message(chat_id = chat_id, text=f"\n{type} *****Filtered Bullish Golden Pivot Zone (GPZ)***** \n{filtered_bullish_gpz_list}")
+
+        logger.info(f"\nBearish Golden Pivot Zone (GPZ)***** \n{bearish_gpz_list}")
+        context.bot.send_message(chat_id = chat_id, text=f"\n{type} *****Bearish Golden Pivot Zone (GPZ)***** \n{bearish_gpz_list}")
+
+        logger.info(f"\nBullish Golden Pivot Zone (GPZ)***** \n{bullish_gpz_list}")
+        context.bot.send_message(chat_id = chat_id, text=f"\n{type} *****Bullish Golden Pivot Zone (GPZ)***** \n{bullish_gpz_list}")
+
+        
         logger.info("*** Finished to check all Future pairs *****")
         # context.bot.send_message(chat_id=chat_id, text=sresponse)
 
@@ -383,32 +488,58 @@ def filter(pivot_map, type, pair) :
     descending = False
     inside = False
     narrow_cpr = False
+    bearish_gpz = False
+    bullish_gpz = False
+    oascending = False
+    odescending = False
     try:
         
-        (yday_tc, yday_p, yday_bc, tday_tc, tday_p, tday_bc, yday_c) = pivot_map.get(pair)
-      
-        narrow = 0.0015
-        if(type=="week"):
-            narrow = 0.005
-        if(type=="month"):
-            narrow = 0.01
-        narrow_cpr = (tday_tc - tday_bc) < (yday_c * narrow)
-     
+        # (yday_tc, yday_p, yday_bc, tday_tc, tday_p, tday_bc, yday_c) = pivot_map.get(pair)
+        _pivots=pivot_map.get(pair)
+        if(_pivots):
+            yday_tc = _pivots.get("yday_tc")
+            yday_p = _pivots.get("yday_p")
+            yday_bc = _pivots.get("yday_bc")
+            tday_tc = _pivots.get("tday_tc")
+            tday_p = _pivots.get("tday_p")
+            tday_bc = _pivots.get("tday_bc")
+            yday_c = _pivots.get("yday_c")
 
-        if(tday_p >= yday_p): #ascending
-            ascending = True
-        elif(tday_p < yday_p): #descending
-            descending = True
-        if(tday_tc <= yday_tc and tday_bc > yday_bc):
-            inside = True
+            H3 = _pivots.get("H3")
+            L3 = _pivots.get("L3")
         
-        logger.info(f"{pair} =>  {ascending}, {descending}, {inside}, {narrow_cpr} {(tday_tc - tday_bc)} { yday_c * 0.001}")
+            narrow = 0.0015
+            if(type=="week"):
+                narrow = 0.005
+            if(type=="month"):
+                narrow = 0.01
+            narrow_cpr = (tday_tc - tday_bc) < (yday_c * narrow)
+            
+
+            if(tday_bc >= yday_tc): #ascending
+                ascending = True
+            elif(tday_tc <= yday_bc): #descending
+                descending = True
+            elif(tday_tc > yday_tc and tday_bc >= yday_bc) :
+                oascending = True
+            elif(tday_bc < yday_bc and tday_tc <= yday_tc):
+                odescending = True
+            if(tday_tc <= yday_tc and tday_bc > yday_bc):
+                inside = True
+            
+            
+            if ((H3 <= tday_tc and H3 > tday_bc) or (H3 < tday_tc and H3 >= tday_bc)) :
+                bearish_gpz = True
+            if ((L3 <= tday_tc and L3 > tday_bc) or (L3 < tday_tc and L3 >= tday_bc)):
+                bullish_gpz = True
+            # logger.info(f"{pair} =>  {ascending}, {descending}, {oascending}, {odescending}, {inside}, {narrow_cpr} {(tday_tc - tday_bc)} { yday_c * 0.001} {bearish_gpz} {bullish_gpz}")
 
 
     except Exception as exception:
         logger.error(f"Some error {exception}")
+        traceback.print_exc()
 
-    return (ascending, descending, inside, narrow_cpr)
+    return (ascending, descending, oascending, odescending, inside, narrow_cpr, bearish_gpz, bullish_gpz)
 
     
 
