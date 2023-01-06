@@ -7,17 +7,25 @@ import traceback
 
 from binance.enums import HistoricalKlinesType
 from client import Client
-from telegram.ext import Updater, PrefixHandler, CommandHandler, MessageHandler, Filters, defaults
-from telegram.ext.callbackcontext import CallbackContext
+from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, Update, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
+from telegram.ext import (
+    Application,
+    CommandHandler,
+    ContextTypes,
+    ConversationHandler,CallbackQueryHandler,
+    MessageHandler,
+    filters,
+)
+from itertools import zip_longest
 from datetime import date
 from datetime import timedelta
-from telegram import ParseMode
+import io
 from dateutil.relativedelta import *
 import concurrent.futures
 # Enables logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
-
+from webhook.config import settings
 logger = logging.getLogger(__name__)
 vlist = [
     "ALGOUSDT", 
@@ -49,7 +57,7 @@ vlist = [
     "BTCUSDT",
     "BNBUSDT"
 ]
-list = [
+script_list = [
 "BTCUSDT",
 "ETHUSDT",
 "BCHUSDT",
@@ -192,15 +200,15 @@ list = [
 PORT = int(os.environ.get('PORT', '8443'))
 
 # We define command handlers. Error handlers also receive the raised TelegramError object in error.
-def start(update, context):
+async def start(update, context):
     """Sends a message when the command /start is issued."""
-    help(update, context)
+    await help(update, context)
 
 
-def help(update, context):
+async def help(update, context):
     logger.info(f"here")
     """Sends a message when the command /help is issued."""
-    context.bot.send_message(chat_id = update.effective_chat.id, text='Commands\n'
+    await context.bot.send_message(chat_id = update.effective_chat.id, text='Commands\n'
             '/today ; \n       ===> Show today CPR Signals\n'
             '/week ; \n       ===> Show week CPR Signals\n'
             '/month ; \n       ===> Show month CPR Signals\n'
@@ -212,14 +220,14 @@ def help(update, context):
     logger.info(f"{trading_pairs}")
 
 
-def echo(update, context):
+async def echo(update, context):
     """Echos the user message."""
-    context.bot.send_message(chat_id = update.effective_chat.id, text=update.effective_message.text)
+    await context.bot.send_message(chat_id = update.effective_chat.id, text=update.effective_message.text)
 
 
 def error(update, context):
     """Logs Errors caused by Updates."""
-    logger.warning('Update "%s" caused error "%s"', update, context.error)
+    logger.error(context.error)
 
 
 
@@ -232,7 +240,7 @@ def get_ohlc(pair, type, interval, start_str):
     try:
         binance_client = Client()
       
-        resp = binance_client.get_historical_klines(symbol=pair, interval=interval, start_str=start_str, limit=2, klines_type=HistoricalKlinesType.SPOT)
+        resp = binance_client.get_historical_klines(symbol=pair, interval=interval, start_str=start_str, limit=2, klines_type=HistoricalKlinesType.FUTURES)
       
         db_yday = resp[0]
         db_yday_o = float(db_yday[1])
@@ -321,55 +329,87 @@ def get_camarilla(yday_o, yday_h, yday_l, yday_c):
 max_workers=10
 # poll=180 # secs
 pivot_map={}
-def today_signals(update, context):
- 
+async def today_signals(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    
     poll = 1
     dat = date.today() - timedelta(days=2)
     interval = Client.KLINE_INTERVAL_1DAY
     start_str = dat.strftime('%d %B %Y')
+    data={
+            "chat_id":update.message.chat_id,
+            "list": list,
+            "type": "day",
+            "interval": interval,
+            "start_str": start_str,
+            "poll": poll,
+            "args": context.args
+            
+        }
     
-    
-    context.bot.send_message(chat_id=update.effective_chat.id, text=f"Loading Daily Pivots from {start_str} pls wait for few minutes.....")
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=f"Loading Daily Pivots from {start_str} pls wait for few minutes.....")
     # context.job_queue.run_daily(update_pivots, time=datetime.time(hour=1, minute=0), context=[update.message.chat_id, list])
-    context.job_queue.run_once(update_pivots, when=poll, context=[update.message.chat_id, list, poll, "day", interval, start_str, context.args])
+    # context.job_queue.run_once(update_pivots, when=poll, context=[update.message.chat_id, list, poll, "day", interval, start_str, context.args])
+    context.job_queue.run_once(update_pivots, when=poll, data=data)
     
     
-def week_signals(update, context):
+async def week_signals(update: Update, context: ContextTypes.DEFAULT_TYPE):
     poll = 1
 
     interval = Client.KLINE_INTERVAL_1WEEK
     dat = date.today() + relativedelta(weeks=-3, weekday=MO(0))
     start_str = dat.strftime('%d %B %Y')
-    context.bot.send_message(chat_id=update.effective_chat.id, text=f"Loading Weekly Pivots from {start_str} pls wait for few minutes.....")
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=f"Loading Weekly Pivots from {start_str} pls wait for few minutes.....")
     # context.job_queue.run_daily(update_pivots, time=datetime.time(hour=1, minute=0), context=[update.message.chat_id, list])
-    context.job_queue.run_once(update_pivots, when=poll, context=[update.message.chat_id, list, poll, "week",interval, start_str, context.args])
+    # context.job_queue.run_once(update_pivots, when=poll, context=[update.message.chat_id, list, poll, "week",interval, start_str, context.args])
+    data={
+        "chat_id":update.message.chat_id,
+        "list": script_list,
+        "type": "week",
+        "interval": interval,
+        "start_str": start_str,
+        "poll": poll,
+        "args": context.args
+    }
+    context.job_queue.run_once(update_pivots, when=poll, data=data)
     
    
-def month_signals(update, context):
+async def month_signals(update: Update, context: ContextTypes.DEFAULT_TYPE):
     poll = 1
     interval = Client.KLINE_INTERVAL_1MONTH    
     dat =  date.today().replace(day=1) - relativedelta(months=2,)
     start_str = dat.strftime('%d %B %Y')
-    context.bot.send_message(chat_id=update.effective_chat.id, text=f"Loading Monthly Pivots from {start_str} pls wait for few minutes.....")
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=f"Loading Monthly Pivots from {start_str} pls wait for few minutes.....")
     # context.job_queue.run_daily(update_pivots, time=datetime.time(hour=1, minute=0), context=[update.message.chat_id, list])
-    context.job_queue.run_once(update_pivots, when=poll, context=[update.message.chat_id, list, poll, "month", interval, start_str, context.args])
+    # context.job_queue.run_once(update_pivots, when=poll, context=[update.message.chat_id, list, poll, "month", interval, start_str, context.args])
+    data={
+        "chat_id":update.message.chat_id,
+        "list": script_list,
+        "type": "month",
+        "interval": interval,
+        "start_str": start_str,
+        "poll": poll,
+        "args": context.args
+    }
+    context.job_queue.run_once(update_pivots, when=poll, data=data)
     
-def update_pivots(context):
-    chat_id = context.job.context[0]
-    list = context.job.context[1]
-    _poll = context.job.context[2]
-    type = context.job.context[3]
-    interval = context.job.context[4]
-    start_str = context.job.context[5]
-    args = context.job.context[6]
+async def update_pivots(context: ContextTypes.DEFAULT_TYPE) -> None:
+    job = context.job
+    
+    chat_id = context.job.data["chat_id"]
+    list = context.job.data["list"]
+    _poll = context.job.data["poll"]
+    type = context.job.data["type"]
+    interval = context.job.data["interval"]
+    start_str = context.job.data["start_str"]
+    args = context.job.data["args"]
     logger.info(f"Loading Pivots poll: {_poll}")
     pivot_map.clear()
     count = 0
-    total = len(list)
+    total = len(script_list)
     partial_check_price = functools.partial(get_cprs, type, interval, start_str)
     with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
         # for pair, (yday_tc, yday_p, yday_bc, tday_tc, tday_p, tday_bc, yday_c) in zip(list, executor.map(partial_check_price, list)):
-        for pair, _pivots in zip(list, executor.map(partial_check_price, list)):
+        for pair, _pivots in zip(script_list, executor.map(partial_check_price, script_list)):
             if("yday_tc" in _pivots):
                 pivot_map[pair]= _pivots
                 count=count+1
@@ -378,10 +418,28 @@ def update_pivots(context):
                 logger.debug(f"ignored ------> {pair}")
 
     logger.info(f"Loaded CPR")
-    run_filters(context, pivot_map, chat_id, list, type, args)
+    await run_filters(context, pivot_map, chat_id, script_list, type, args)
 
 
-def run_filters(context, pivot_map, chat_id, list, type, args):
+def prepare_list(name, script_list, watchlist="", message=""):
+    
+    zips = zip_longest(*[iter(script_list)] * 2)
+    text=f"|---{name}"
+    watch=f"###{name},"
+    for symbol1, symbol2 in zips:
+        symbol1_=f"BINANCE:{symbol1}PERP"
+        chart_link1= f"https://in.tradingview.com/chart?symbol={symbol1_}"
+        text+=f"\n|------ <a href='{chart_link1}'>{symbol1:<10}</a>"
+        watch+=f"{symbol1_},"
+        if(symbol2):
+            symbol2_=f"BINANCE:{symbol2}PERP"
+            chart_link2= f"https://in.tradingview.com/chart?symbol={symbol2_}"
+            text+=f"|  <a href='{chart_link2}'>{symbol2:<10}</a>"
+            watch+=f"{symbol2_},"
+    text+="\n|\n"
+    return watchlist+watch, message+text
+    
+async def run_filters(context: ContextTypes.DEFAULT_TYPE, pivot_map, chat_id, script_list, type, args)-> None:
     logger.info("*** Starting to check all Future pairs *****")
     descending_list= []
     ascending_list= []
@@ -395,13 +453,13 @@ def run_filters(context, pivot_map, chat_id, list, type, args):
     filtered_bullish_gpz_list =[]
     filtered_bearish_gpz_list =[]
     count = 0
-    total = len(list)
+    total = len(script_list)
     partial_check_price = functools.partial(filter,  pivot_map, type)
 
     with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
         
         isvidhya= (len(args) == 1) and (args[0]=="vidhya")
-        for pair, (ascending, descending, oascending, odescending, inside_cpr, narrow_cpr, bearish_gpz, bullish_gpz) in zip(list, executor.map(partial_check_price, list)):
+        for pair, (ascending, descending, oascending, odescending, inside_cpr, narrow_cpr, bearish_gpz, bullish_gpz) in zip(script_list, executor.map(partial_check_price, script_list)):
             count=count+1
             short=False
             long = False
@@ -449,40 +507,65 @@ def run_filters(context, pivot_map, chat_id, list, type, args):
         # logger.info(f"\n\nLong List***** \n{ascending_list}")
         # context.bot.send_message(chat_id = chat_id, text=f"\n{type}  *****Ascending CPR List***** \n{ascending_list}")
 
-        logger.info(f"\nInside CPR List***** \n{inside_cpr_list}")
-        context.bot.send_message(chat_id = chat_id, text=f"\n{type} *****Inside CPR List***** \n{inside_cpr_list}")
+        # logger.info(f"\nInside CPR List***** \n{inside_cpr_list}")
+        
+        (watchlist, message) = prepare_list("Narrow Cpr", narrow_list, "", "")
+        (watchlist, message) = prepare_list("Inside Cpr", inside_cpr_list, watchlist, message)
+        await context.bot.send_message(chat_id = chat_id, parse_mode="HTML", disable_web_page_preview=True, text=message)
 
-        logger.info(f"\nNarrow CPR List***** \n{narrow_list}")
-        context.bot.send_message(chat_id = chat_id, text=f"\n{type} *****Narrow CPR List***** \n{narrow_list}")
+        (watchlist, message) =prepare_list("Bearish GPZ", bearish_gpz_list, watchlist, "")
+        (watchlist, message) =prepare_list("Bullish GPZ", bullish_gpz_list, watchlist, message)
+        await context.bot.send_message(chat_id = chat_id, parse_mode="HTML", disable_web_page_preview=True, text=message)
+        
+        (watchlist, message) =prepare_list("*** Long  (narrow + (hv/ohv/inside_cpr)", long_list, watchlist, "")
+        (watchlist, message) =prepare_list("*** Short (narrow + (lv/olv/inside_cpr)", short_list, watchlist, message)
+        await context.bot.send_message(chat_id = chat_id, parse_mode="HTML", disable_web_page_preview=True, text=message)
 
-        logger.info(f"\nHigh Probable LongList***** \n{long_list}")
-        context.bot.send_message(chat_id = chat_id, text=f"\n{type} *****High Probable LongList (narrow + (hv/ohv/inside_cpr))***** \n{long_list}")
+        (watchlist, message) =prepare_list("*** Bearish GPZ (narrow + (lv/olv/inside_cpr)", filtered_bearish_gpz_list, watchlist, "")
+        (watchlist, message) =prepare_list("*** Bullish GPZ (narrow + (hv/ohv/inside_cpr)", filtered_bullish_gpz_list, watchlist, message)
+        await context.bot.send_message(chat_id = chat_id, parse_mode="HTML", disable_web_page_preview=True, text=message)
 
-        logger.info(f"\nHigh Probable Short List***** \n{short_list}")
-        context.bot.send_message(chat_id = chat_id, text=f"\n{type} *****High Probable Short List (narrow + (lv/olv/inside_cpr))***** \n{short_list}")
+        filename=f"crypto-watchlist-{date.today()}.txt"
+        with open("watchlist.txt", 'w+') as wr:
+            wr.write(watchlist)
+            
+        
+        await context.bot.send_document(chat_id = chat_id, document=open('watchlist.txt', 'rb'), filename=filename)
+        # await context.bot.send_message(chat_id = chat_id, text=f"\n{type} *****Inside CPR List***** \n{inside_cpr_list}")
+
+        # logger.info(f"\nNarrow CPR List***** \n{narrow_list}")
+        # await context.bot.send_message(chat_id = chat_id, text=f"\n{type} *****Narrow CPR List***** \n{narrow_list}")
+
+        # logger.info(f"\nHigh Probable LongList***** \n{long_list}")
+        # await context.bot.send_message(chat_id = chat_id, text=f"\n{type} *****High Probable LongList (narrow + (hv/ohv/inside_cpr))***** \n{long_list}")
+
+        # logger.info(f"\nHigh Probable Short List***** \n{short_list}")
+        # await context.bot.send_message(chat_id = chat_id, text=f"\n{type} *****High Probable Short List (narrow + (lv/olv/inside_cpr))***** \n{short_list}")
         
         
-        # logger.info(f"\nOther Narrow List***** \n{just_narrow_list}")
-        # context.bot.send_message(chat_id = chat_id, text=f"\n{type} *****Other Narrow List***** \n{just_narrow_list}")
+        # # logger.info(f"\nOther Narrow List***** \n{just_narrow_list}")
+        # # context.bot.send_message(chat_id = chat_id, text=f"\n{type} *****Other Narrow List***** \n{just_narrow_list}")
 
 
-        logger.info(f"\nFiltered Bearish Golden Pivot Zone (GPZ)***** \n{filtered_bearish_gpz_list}")
-        context.bot.send_message(chat_id = chat_id, text=f"\n{type} *****Filtered Bearish Golden Pivot Zone (GPZ)***** \n{filtered_bearish_gpz_list}")
+        # logger.info(f"\nFiltered Bearish Golden Pivot Zone (GPZ)***** \n{filtered_bearish_gpz_list}")
+        # await context.bot.send_message(chat_id = chat_id, text=f"\n{type} *****Filtered Bearish Golden Pivot Zone (GPZ)***** \n{filtered_bearish_gpz_list}")
 
-        logger.info(f"\nFiltered  Bullish Golden Pivot Zone (GPZ)***** \n{filtered_bullish_gpz_list}")
-        context.bot.send_message(chat_id = chat_id, text=f"\n{type} *****Filtered Bullish Golden Pivot Zone (GPZ)***** \n{filtered_bullish_gpz_list}")
+        # logger.info(f"\nFiltered  Bullish Golden Pivot Zone (GPZ)***** \n{filtered_bullish_gpz_list}")
+        # await context.bot.send_message(chat_id = chat_id, text=f"\n{type} *****Filtered Bullish Golden Pivot Zone (GPZ)***** \n{filtered_bullish_gpz_list}")
 
-        logger.info(f"\nBearish Golden Pivot Zone (GPZ)***** \n{bearish_gpz_list}")
-        context.bot.send_message(chat_id = chat_id, text=f"\n{type} *****Bearish Golden Pivot Zone (GPZ)***** \n{bearish_gpz_list}")
+        # logger.info(f"\nBearish Golden Pivot Zone (GPZ)***** \n{bearish_gpz_list}")
+        # await context.bot.send_message(chat_id = chat_id, text=f"\n{type} *****Bearish Golden Pivot Zone (GPZ)***** \n{bearish_gpz_list}")
 
-        logger.info(f"\nBullish Golden Pivot Zone (GPZ)***** \n{bullish_gpz_list}")
-        context.bot.send_message(chat_id = chat_id, text=f"\n{type} *****Bullish Golden Pivot Zone (GPZ)***** \n{bullish_gpz_list}")
+        # logger.info(f"\nBullish Golden Pivot Zone (GPZ)***** \n{bullish_gpz_list}")
+        # await context.bot.send_message(chat_id = chat_id, text=f"\n{type} *****Bullish Golden Pivot Zone (GPZ)***** \n{bullish_gpz_list}")
 
         
         logger.info("*** Finished to check all Future pairs *****")
         # context.bot.send_message(chat_id=chat_id, text=sresponse)
 
-       
+
+
+
 def filter(pivot_map, type, pair) :
     ascending=False
     descending = False
@@ -548,15 +631,17 @@ def main():
     # Creates the Updater and pass it your bot's token.
     # Make sure to set use_context=True to use the new context based callbacks
     # Post version 12 this will no longer be necessary
-    TOKEN = '5332543721:AAFaa6R56v4vwXPunxWa42AP0JGxHsh4ELI'#enter your token here
+    dp = Application.builder().token(settings.telegram_alert_config['cprsignals.alerts']['bot_token']).build()
+    
     # APP_NAME='https://dailyfibpivotsignals.herokuapp.com/'#Edit the heroku app-name
     
-    updater = Updater(token=TOKEN, defaults=defaults.Defaults(parse_mode=ParseMode.HTML))
+    # updater = Updater(token=TOKEN, defaults=defaults.Defaults(parse_mode=ParseMode.HTML))
 
     # Get the dispatcher to register handlers
-    dp = updater.dispatcher
+    # dp = updater.dispatcher
 
     # on different commands - answer in Telegram
+
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("help", help))
     dp.add_handler(CommandHandler("today", today_signals))
@@ -569,8 +654,7 @@ def main():
     # log all errors
     dp.add_error_handler(error)
     # updater.start_webhook(listen="0.0.0.0", port=PORT, url_path=TOKEN, webhook_url=APP_NAME + TOKEN)
-    updater.start_polling()
-    updater.idle()
+    dp.run_polling()
 
 
 if __name__ == '__main__':

@@ -12,7 +12,7 @@ idna==3.3
 multidict==5.2.0
 python-binance==1.0.16
 python-dateutil==2.8.2
-python-telegram-bot==13.10
+
 pytz==2021.3
 pytz-deprecation-shim==0.1.0.post0
 regex==2021.11.10
@@ -25,3 +25,10 @@ ujson==5.1.0
 urllib3==1.26.7
 websockets==9.1
 yarl==1.7.2
+python-telegram-bot==20.0a6
+django==4.1.2
+djangorestframework
+django-health-check
+requests
+
+pandas
