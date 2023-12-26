@@ -279,6 +279,7 @@ def get_cprs(type, interval, start_str, pair):
         (tday_tc, tday_p, tday_bc) = get_cpr(yday_o, yday_h, yday_l, yday_c)
         (yday_tc, yday_p, yday_bc) = get_cpr(db_yday_o, db_yday_h, db_yday_l, db_yday_c)
         (H3, L3, H4, L4, H5, L5, H6, L6) = get_camarilla(yday_o, yday_h, yday_l, yday_c)
+        (yH3,yL3, yH4, yL4, yH5, yL5, yH6, yL6) = get_camarilla(db_yday_o, db_yday_h, db_yday_l, db_yday_c)
 
         _pivots= {
             "yday_tc" : yday_tc,
@@ -296,6 +297,14 @@ def get_cprs(type, interval, start_str, pair):
             "L5" : L5,
             "H6" : H6,
             "L6" : L6,
+            "YH3" : yH3,
+            "YL3" : yL3,
+            "YH4" : yH4,
+            "YL4" : yL4,
+            "YH5" : yH5,
+            "YL5" : yL5,
+            "YH6" : yH6,
+            "YL6" : yL6,
         }
         # logger.info(f"Loaded {pair} {yday_o}, {yday_h}, {yday_l}, {yday_c} {H3} {L3} {tday_tc} {tday_bc}")
         return _pivots
@@ -447,6 +456,7 @@ async def run_filters(context: ContextTypes.DEFAULT_TYPE, pivot_map, chat_id, sc
     bearish_gpz_list =[]
     filtered_bullish_gpz_list =[]
     filtered_bearish_gpz_list =[]
+    inside_camarilla_list =[]
     count = 0
     total = len(script_list)
     partial_check_price = functools.partial(filter,  pivot_map, type)
@@ -454,7 +464,7 @@ async def run_filters(context: ContextTypes.DEFAULT_TYPE, pivot_map, chat_id, sc
     with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
         
         isvidhya= (len(args) == 1) and (args[0]=="vidhya")
-        for pair, (ascending, descending, oascending, odescending, inside_cpr, narrow_cpr, bearish_gpz, bullish_gpz) in zip(script_list, executor.map(partial_check_price, script_list)):
+        for pair, (ascending, descending, oascending, odescending, inside_cpr, narrow_cpr, bearish_gpz, bullish_gpz, inside_camarilla) in zip(script_list, executor.map(partial_check_price, script_list)):
             count=count+1
             short=False
             long = False
@@ -468,6 +478,9 @@ async def run_filters(context: ContextTypes.DEFAULT_TYPE, pivot_map, chat_id, sc
             if(not isvidhya and inside_cpr) or (isvidhya and inside_cpr and pair in vlist):
                 inside_cpr_list.append(pair)
             
+            if(not isvidhya and inside_camarilla) or (isvidhya and inside_camarilla and pair in vlist):
+                inside_camarilla_list.append(pair)
+
             if(not isvidhya and narrow_cpr) or (isvidhya and narrow_cpr and pair in vlist):
                 narrow_list.append(pair)
                 if(inside_cpr or ascending or oascending):
@@ -517,8 +530,8 @@ async def run_filters(context: ContextTypes.DEFAULT_TYPE, pivot_map, chat_id, sc
         (watchlist, message) = prepare_list("Inside Cpr", inside_cpr_list, watchlist, message)
         await context.bot.send_message(chat_id = chat_id, parse_mode="HTML", disable_web_page_preview=True, text=message)
 
-        
-        (watchlist, message) =prepare_list("Bearish GPZ", bearish_gpz_list, watchlist, "")
+        (watchlist, message) = prepare_list("Inside Camarilla", inside_camarilla_list, watchlist, "")
+        (watchlist, message) =prepare_list("Bearish GPZ", bearish_gpz_list, watchlist, message)
         (watchlist, message) =prepare_list("Bullish GPZ", bullish_gpz_list, watchlist, message)
         await context.bot.send_message(chat_id = chat_id, parse_mode="HTML", disable_web_page_preview=True, text=message)
 
@@ -575,6 +588,7 @@ def filter(pivot_map, type, pair) :
     bullish_gpz = False
     oascending = False
     odescending = False
+    inside_camarilla = False
     try:
         
         # (yday_tc, yday_p, yday_bc, tday_tc, tday_p, tday_bc, yday_c) = pivot_map.get(pair)
@@ -591,6 +605,13 @@ def filter(pivot_map, type, pair) :
             H3 = _pivots.get("H3")
             L3 = _pivots.get("L3")
         
+            H4 = _pivots.get("H4")
+            L4 = _pivots.get("L4")
+        
+            
+            YH4 = _pivots.get("YH4")
+            YL4 = _pivots.get("YL4")
+
             narrow = 0.0015
             if(type=="week"):
                 narrow = 0.005
@@ -615,6 +636,9 @@ def filter(pivot_map, type, pair) :
                 bearish_gpz = True
             if ((L3 <= tday_tc and L3 > tday_bc) or (L3 < tday_tc and L3 >= tday_bc)):
                 bullish_gpz = True
+
+            if (H4 <= YH4 and L4 >= YL4):
+                inside_camarilla = True
             # logger.info(f"{pair} =>  {ascending}, {descending}, {oascending}, {odescending}, {inside}, {narrow_cpr} {(tday_tc - tday_bc)} { yday_c * 0.001} {bearish_gpz} {bullish_gpz}")
 
 
@@ -622,7 +646,7 @@ def filter(pivot_map, type, pair) :
         logger.error(f"Some error {exception}")
         traceback.print_exc()
 
-    return (ascending, descending, oascending, odescending, inside, narrow_cpr, bearish_gpz, bullish_gpz)
+    return (ascending, descending, oascending, odescending, inside, narrow_cpr, bearish_gpz, bullish_gpz, inside_camarilla)
 
     
 
