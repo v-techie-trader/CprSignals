@@ -13,7 +13,7 @@ logger.setLevel(logging.DEBUG)
 stdout_handler = logging.StreamHandler(sys.stdout)
 logger.addHandler(stdout_handler)
 handler = RotatingFileHandler(
-    filename=f"StockSignals_{td}.log", maxBytes=(1048576*5), backupCount=7
+    filename=f"CprSignals_{td}.log", maxBytes=(1048576*5), backupCount=7
 )
 handler.setFormatter(formatter)
 logger.addHandler(handler)

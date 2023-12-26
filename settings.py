@@ -8,7 +8,7 @@ send_telegram_alerts = True
 telegram_alert_config = {
     "cprsignals.alerts": {
         "bot_token" : "5332543721:AAFaa6R56v4vwXPunxWa42AP0JGxHsh4ELI",
-        "channel_id" : -838839150 #-1001871812714  #-839791639
+        "channel_id" : -1001902874892 
     }
 }
 # _bot_token =  "" # Bot token. Get it from @Botfather

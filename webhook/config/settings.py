@@ -1,7 +1,7 @@
 
 import pytz 
 _key_stock_signals_alerts = (
-    "stocksignals.alerts"  # Can be anything. Has to match with "key" in your TradingView alert message. Lenh cancel, close
+    "cprsignals.alerts"  # Can be anything. Has to match with "key" in your TradingView alert message. Lenh cancel, close
 )
 # Telegram Settings
 send_telegram_alerts = True

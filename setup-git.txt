@@ -1,4 +1,4 @@
 git init
 git remote add origin https://v-techie-trader@github.com/v-techie-trader/CprSignals.git
 git pull origin main
-
+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
