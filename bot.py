@@ -29,7 +29,6 @@ from webhook.config import settings
 logger = logging.getLogger(__name__)
 vlist = [
     "ALGOUSDT", 
-    "HNTUSDT",
     "BAKEUSDT",
     "ALICEUSDT", 
     "BATUSDT",
@@ -115,7 +114,6 @@ script_list = [
 "HNTUSDT",
 "ENJUSDT",
 "FLMUSDT",
-"TOMOUSDT",
 "RENUSDT",
 "KSMUSDT",
 "NEARUSDT",
