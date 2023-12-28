@@ -514,18 +514,21 @@ async def run_filters(context: ContextTypes.DEFAULT_TYPE, pivot_map, chat_id, sc
         (watchlist, message) =prepare_list("*** Short (narrow + (lv/olv/inside_cpr)", short_list, watchlist, message)
         await context.bot.send_message(chat_id = chat_id, parse_mode="HTML", disable_web_page_preview=True, text=message)
 
-        (watchlist, message) =prepare_list("*** Bearish GPZ (narrow + (lv/olv/inside_cpr)", filtered_bearish_gpz_list, watchlist, "")
-        (watchlist, message) =prepare_list("*** Bullish GPZ (narrow + (hv/ohv/inside_cpr)", filtered_bullish_gpz_list, watchlist, message)
-
-        (watchlist, message) = prepare_list("Inside Cpr", inside_cpr_list, watchlist, message)
-        (watchlist, message) =prepare_list("Bearish GPZ", bearish_gpz_list, watchlist, message)
-        (watchlist, message) =prepare_list("Bullish GPZ", bullish_gpz_list, watchlist, message)
-        await context.bot.send_message(chat_id = chat_id, parse_mode="HTML", disable_web_page_preview=True, text=message)
-
         (watchlist, message) = prepare_list("Inside Camarilla", inside_camarilla_list, watchlist, "")
         (watchlist, message) =prepare_list("Inside Bearish GPZ", inside_bearish_gpz_list, watchlist, message)
         (watchlist, message) =prepare_list("Inside Bullish GPZ", inside_bullish_gpz_list, watchlist, message)
         await context.bot.send_message(chat_id = chat_id, parse_mode="HTML", disable_web_page_preview=True, text=message)
+
+        (watchlist, message) =prepare_list("*** Bearish GPZ (narrow + (lv/olv/inside_cpr)", filtered_bearish_gpz_list, watchlist, "")
+        (watchlist, message) =prepare_list("*** Bullish GPZ (narrow + (hv/ohv/inside_cpr)", filtered_bullish_gpz_list, watchlist, message)
+        await context.bot.send_message(chat_id = chat_id, parse_mode="HTML", disable_web_page_preview=True, text="")
+
+        (watchlist, message) = prepare_list("Inside Cpr", inside_cpr_list, watchlist, "")
+        (watchlist, message) =prepare_list("Bearish GPZ", bearish_gpz_list, watchlist, message)
+        (watchlist, message) =prepare_list("Bullish GPZ", bullish_gpz_list, watchlist, message)
+        await context.bot.send_message(chat_id = chat_id, parse_mode="HTML", disable_web_page_preview=True, text=message)
+
+
 
 
         filename=f"crypto-watchlist-{type}-{date.today()}.txt"
