@@ -111,7 +111,6 @@ script_list = [
 "UNIUSDT",
 "AVAXUSDT",
 "FTMUSDT",
-"HNTUSDT",
 "ENJUSDT",
 "FLMUSDT",
 "RENUSDT",
@@ -455,6 +454,8 @@ async def run_filters(context: ContextTypes.DEFAULT_TYPE, pivot_map, chat_id, sc
     filtered_bullish_gpz_list =[]
     filtered_bearish_gpz_list =[]
     inside_camarilla_list =[]
+    inside_bullish_gpz_list =[]
+    inside_bearish_gpz_list =[]
     count = 0
     total = len(script_list)
     partial_check_price = functools.partial(filter,  pivot_map, type)
@@ -467,12 +468,6 @@ async def run_filters(context: ContextTypes.DEFAULT_TYPE, pivot_map, chat_id, sc
             short=False
             long = False
             
-            # if(ascending or oascending) :
-            #     ascending_list.append(pair)
-            
-            # if(descending or odescending):
-            #     descending_list.append(pair)
-
             if(not isvidhya and inside_cpr) or (isvidhya and inside_cpr and pair in vlist):
                 inside_cpr_list.append(pair)
             
@@ -506,15 +501,12 @@ async def run_filters(context: ContextTypes.DEFAULT_TYPE, pivot_map, chat_id, sc
 
             if(not isvidhya and long) or (isvidhya and long and pair in vlist):
                 filtered_bullish_gpz_list.append(pair)
-            
-        # logger.info(f"\nShort List***** \n{descending_list}")
-        # context.bot.send_message(chat_id = chat_id, text=f"\n{type} *****Descending CPR List***** \n{descending_list}")
 
-        # logger.info(f"\n\nLong List***** \n{ascending_list}")
-        # context.bot.send_message(chat_id = chat_id, text=f"\n{type}  *****Ascending CPR List***** \n{ascending_list}")
+            if(not isvidhya and bullish_gpz and inside_camarilla) or (isvidhya and bullish_gpz  and inside_camarilla and pair in vlist):
+                inside_bullish_gpz_list.append(pair)
 
-        # logger.info(f"\nInside CPR List***** \n{inside_cpr_list}")
-        
+            if(not isvidhya and bearish_gpz and inside_camarilla ) or (isvidhya and bearish_gpz and inside_camarilla and pair in vlist):
+                inside_bearish_gpz_list.append(pair)
         
         (watchlist, message) = prepare_list("Narrow Cpr", narrow_list, "", "")
         
@@ -526,53 +518,24 @@ async def run_filters(context: ContextTypes.DEFAULT_TYPE, pivot_map, chat_id, sc
         (watchlist, message) =prepare_list("*** Bullish GPZ (narrow + (hv/ohv/inside_cpr)", filtered_bullish_gpz_list, watchlist, message)
 
         (watchlist, message) = prepare_list("Inside Cpr", inside_cpr_list, watchlist, message)
-        await context.bot.send_message(chat_id = chat_id, parse_mode="HTML", disable_web_page_preview=True, text=message)
-
-        (watchlist, message) = prepare_list("Inside Camarilla", inside_camarilla_list, watchlist, "")
         (watchlist, message) =prepare_list("Bearish GPZ", bearish_gpz_list, watchlist, message)
         (watchlist, message) =prepare_list("Bullish GPZ", bullish_gpz_list, watchlist, message)
         await context.bot.send_message(chat_id = chat_id, parse_mode="HTML", disable_web_page_preview=True, text=message)
 
-        
+        (watchlist, message) = prepare_list("Inside Camarilla", inside_camarilla_list, watchlist, "")
+        (watchlist, message) =prepare_list("Inside Bearish GPZ", inside_bearish_gpz_list, watchlist, message)
+        (watchlist, message) =prepare_list("Inside Bullish GPZ", inside_bullish_gpz_list, watchlist, message)
         await context.bot.send_message(chat_id = chat_id, parse_mode="HTML", disable_web_page_preview=True, text=message)
 
-        filename=f"crypto-watchlist-{date.today()}.txt"
+
+        filename=f"crypto-watchlist-{type}-{date.today()}.txt"
         with open("watchlist.txt", 'w+') as wr:
             wr.write(watchlist)
             
         
         await context.bot.send_document(chat_id = chat_id, document=open('watchlist.txt', 'rb'), filename=filename)
-        # await context.bot.send_message(chat_id = chat_id, text=f"\n{type} *****Inside CPR List***** \n{inside_cpr_list}")
-
-        # logger.info(f"\nNarrow CPR List***** \n{narrow_list}")
-        # await context.bot.send_message(chat_id = chat_id, text=f"\n{type} *****Narrow CPR List***** \n{narrow_list}")
-
-        # logger.info(f"\nHigh Probable LongList***** \n{long_list}")
-        # await context.bot.send_message(chat_id = chat_id, text=f"\n{type} *****High Probable LongList (narrow + (hv/ohv/inside_cpr))***** \n{long_list}")
-
-        # logger.info(f"\nHigh Probable Short List***** \n{short_list}")
-        # await context.bot.send_message(chat_id = chat_id, text=f"\n{type} *****High Probable Short List (narrow + (lv/olv/inside_cpr))***** \n{short_list}")
-        
-        
-        # # logger.info(f"\nOther Narrow List***** \n{just_narrow_list}")
-        # # context.bot.send_message(chat_id = chat_id, text=f"\n{type} *****Other Narrow List***** \n{just_narrow_list}")
-
-
-        # logger.info(f"\nFiltered Bearish Golden Pivot Zone (GPZ)***** \n{filtered_bearish_gpz_list}")
-        # await context.bot.send_message(chat_id = chat_id, text=f"\n{type} *****Filtered Bearish Golden Pivot Zone (GPZ)***** \n{filtered_bearish_gpz_list}")
-
-        # logger.info(f"\nFiltered  Bullish Golden Pivot Zone (GPZ)***** \n{filtered_bullish_gpz_list}")
-        # await context.bot.send_message(chat_id = chat_id, text=f"\n{type} *****Filtered Bullish Golden Pivot Zone (GPZ)***** \n{filtered_bullish_gpz_list}")
-
-        # logger.info(f"\nBearish Golden Pivot Zone (GPZ)***** \n{bearish_gpz_list}")
-        # await context.bot.send_message(chat_id = chat_id, text=f"\n{type} *****Bearish Golden Pivot Zone (GPZ)***** \n{bearish_gpz_list}")
-
-        # logger.info(f"\nBullish Golden Pivot Zone (GPZ)***** \n{bullish_gpz_list}")
-        # await context.bot.send_message(chat_id = chat_id, text=f"\n{type} *****Bullish Golden Pivot Zone (GPZ)***** \n{bullish_gpz_list}")
-
         
         logger.info("*** Finished to check all Future pairs *****")
-        # context.bot.send_message(chat_id=chat_id, text=sresponse)
 
 
 
@@ -655,14 +618,7 @@ def main():
     # Post version 12 this will no longer be necessary
     dp = Application.builder().token(settings.telegram_alert_config['cprsignals.alerts']['bot_token']).build()
     
-    # APP_NAME='https://dailyfibpivotsignals.herokuapp.com/'#Edit the heroku app-name
-    
-    # updater = Updater(token=TOKEN, defaults=defaults.Defaults(parse_mode=ParseMode.HTML))
 
-    # Get the dispatcher to register handlers
-    # dp = updater.dispatcher
-
-    # on different commands - answer in Telegram
 
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("help", help))
