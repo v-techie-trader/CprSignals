@@ -508,13 +508,12 @@ async def run_filters(context: ContextTypes.DEFAULT_TYPE, pivot_map, chat_id, sc
             if(not isvidhya and bearish_gpz and inside_camarilla ) or (isvidhya and bearish_gpz and inside_camarilla and pair in vlist):
                 inside_bearish_gpz_list.append(pair)
         
-        (watchlist, message) = prepare_list("Narrow Cpr", narrow_list, "", "")
-        (watchlist, message) =prepare_list("*** Long  (narrow + (hv/ohv/inside_cpr)", long_list, watchlist, message)
+        
+        (watchlist, message) =prepare_list("*** Long  (narrow + (hv/ohv/inside_cpr)", long_list, "","")
         (watchlist, message) =prepare_list("*** Short (narrow + (lv/olv/inside_cpr)", short_list, watchlist, message)
         await context.bot.send_message(chat_id = chat_id, parse_mode="HTML", disable_web_page_preview=True, text=message)
 
-        (watchlist, message) = prepare_list("Inside Camarilla", inside_camarilla_list, watchlist, "")
-        (watchlist, message) =prepare_list("Inside Bearish GPZ", inside_bearish_gpz_list, watchlist, message)
+        (watchlist, message) =prepare_list("Inside Bearish GPZ", inside_bearish_gpz_list, watchlist, "")
         (watchlist, message) =prepare_list("Inside Bullish GPZ", inside_bullish_gpz_list, watchlist, message)
         await context.bot.send_message(chat_id = chat_id, parse_mode="HTML", disable_web_page_preview=True, text=message)
 
@@ -522,7 +521,10 @@ async def run_filters(context: ContextTypes.DEFAULT_TYPE, pivot_map, chat_id, sc
         (watchlist, message) =prepare_list("*** Bullish GPZ (narrow + (hv/ohv/inside_cpr)", filtered_bullish_gpz_list, watchlist, message)
         await context.bot.send_message(chat_id = chat_id, parse_mode="HTML", disable_web_page_preview=True, text=message)
 
-        (watchlist, message) = prepare_list("Inside Cpr", inside_cpr_list, watchlist, "")
+        
+        (watchlist, message) = prepare_list("Inside Camarilla", inside_camarilla_list, watchlist, "")
+        (watchlist, message) = prepare_list("Inside Cpr", inside_cpr_list, watchlist, message)
+        (watchlist, message) = prepare_list("Narrow Cpr", narrow_list, watchlist, message)
         (watchlist, message) =prepare_list("Bearish GPZ", bearish_gpz_list, watchlist, message)
         (watchlist, message) =prepare_list("Bullish GPZ", bullish_gpz_list, watchlist, message)
         await context.bot.send_message(chat_id = chat_id, parse_mode="HTML", disable_web_page_preview=True, text=message)
