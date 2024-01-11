@@ -826,7 +826,7 @@ def main():
             "start_str": dstart_str,
         }
     dp.job_queue.run_daily(fetch_data, name="daily_update_daily_pivots", time=datetime.time(hour=1, minute=0), data=data)
-    # dp.job_queue.run_once(fetch_data, name="once_update_daily_pivots", when=1, data=data)
+    dp.job_queue.run_once(fetch_data, name="once_update_daily_pivots", when=1, data=data)
 
 
     winterval = Client.KLINE_INTERVAL_1WEEK
@@ -840,7 +840,7 @@ def main():
         "start_str": wstart_str,
     }
     dp.job_queue.run_daily(fetch_data, name="daily_update_week_pivots", time=datetime.time(hour=1, minute=0), data=wdata)
-    # dp.job_queue.run_once(fetch_data, name="once_update_week_pivots",  when=60, data=wdata)
+    dp.job_queue.run_once(fetch_data, name="once_update_week_pivots",  when=60, data=wdata)
 
     minterval = Client.KLINE_INTERVAL_1MONTH    
     mdat =  date.today().replace(day=1) - relativedelta(months=2,)
@@ -853,7 +853,7 @@ def main():
         "start_str": mstart_str,
     }
     dp.job_queue.run_daily(fetch_data, name="daily_update_monthly_pivots", time=datetime.time(hour=1, minute=0), data=mdata)
-    # dp.job_queue.run_once(fetch_data, name="once_update_monthly_pivots", when=120, data=mdata)
+    dp.job_queue.run_once(fetch_data, name="once_update_monthly_pivots", when=120, data=mdata)
 
     t=datetime.datetime.now() #+timedelta(minutes=10)
     first = round_dt(t, timedelta(minutes=5)).astimezone(pytz.utc)+timedelta(seconds=30)
