@@ -350,7 +350,7 @@ async def today_signals(update: Update, context: ContextTypes.DEFAULT_TYPE):
             
         }
     
-    # await handler.send_message(chat_id=context._chat_id, msg=f"Loading Daily Pivots from {start_str} pls wait for few minutes.....", topic=config.get("day"))
+    await handler.send_message(chat_id=context._chat_id, msg=f"Loading Daily Pivots from {start_str} pls wait for few minutes.....", topic=config.get("day"))
     # context.job_queue.run_daily(update_pivots, time=datetime.time(hour=1, minute=0), conmsg=[update.message.chat_id, list])
     # context.job_queue.run_once(update_pivots, when=poll, conmsg=[update.message.chat_id, list, poll, "day", interval, start_str, context.args])
     context.job_queue.run_once(update_pivots, when=poll, data=data)
@@ -362,7 +362,7 @@ async def week_signals(update: Update, context: ContextTypes.DEFAULT_TYPE):
     interval = Client.KLINE_INTERVAL_1WEEK
     dat = date.today() + relativedelta(weeks=-3, weekday=MO(0))
     start_str = dat.strftime('%d %B %Y')
-    # await handler.send_message(chat_id=context._chat_id, msg=f"Loading Weekly Pivots from {start_str} pls wait for few minutes.....", topic=config.get("week"))
+    await handler.send_message(chat_id=context._chat_id, msg=f"Loading Weekly Pivots from {start_str} pls wait for few minutes.....", topic=config.get("week"))
     # context.job_queue.run_daily(update_pivots, time=datetime.time(hour=1, minute=0), conmsg=[update.message.chat_id, list])
     # context.job_queue.run_once(update_pivots, when=poll, conmsg=[update.message.chat_id, list, poll, "week",interval, start_str, context.args])
     data={
@@ -382,7 +382,7 @@ async def month_signals(update: Update, context: ContextTypes.DEFAULT_TYPE):
     interval = Client.KLINE_INTERVAL_1MONTH    
     dat =  date.today().replace(day=1) - relativedelta(months=2,)
     start_str = dat.strftime('%d %B %Y')
-    # await handler.send_message(chat_id=context._chat_id, msg=f"Loading Monthly Pivots from {start_str} pls wait for few minutes.....", topic=config.get("month"))
+    await handler.send_message(chat_id=context._chat_id, msg=f"Loading Monthly Pivots from {start_str} pls wait for few minutes.....", topic=config.get("month"))
     # context.job_queue.run_daily(update_pivots, time=datetime.time(hour=1, minute=0), conmsg=[update.message.chat_id, list])
     # context.job_queue.run_once(update_pivots, when=poll, conmsg=[update.message.chat_id, list, poll, "month", interval, start_str, context.args])
     data={
@@ -400,83 +400,134 @@ async def check_break(context: ContextTypes.DEFAULT_TYPE) -> None:
     chat_id = context.job.data["chat_id"]
     interval = Client.KLINE_INTERVAL_5MINUTE
     logger.info(f"Checking Break")
-    dinside_bullish_gpz_list = pivot_map["day"]["inside_bullish_gpz_list"]
-    dinside_bearish_gpz_list = pivot_map["day"]["inside_bearish_gpz_list"]
     dp = pivot_map["day"]
-    winside_bullish_gpz_list = pivot_map["week"]["inside_bullish_gpz_list"]
-    winside_bearish_gpz_list = pivot_map["week"]["inside_bearish_gpz_list"]
+    dbullish_gpz_list = dp["bullish_gpz_list"]
+    dbearish_gpz_list = dp["bearish_gpz_list"]
+    dsinside_camarilla_list = dp["inside_camarilla_list"]
+    
     wp = pivot_map["week"]
-    minside_bullish_gpz_list = pivot_map["month"]["inside_bullish_gpz_list"]
-    minside_bearish_gpz_list = pivot_map["month"]["inside_bearish_gpz_list"]
+    wbullish_gpz_list = wp["bullish_gpz_list"]
+    wbearish_gpz_list = wp["bearish_gpz_list"]
+    wsinside_camarilla_list = wp["inside_camarilla_list"]
+    
     mp = pivot_map["month"]
+    mbullish_gpz_list = mp["bullish_gpz_list"]
+    mbearish_gpz_list = mp["bearish_gpz_list"]
+    msinside_camarilla_list = mp["inside_camarilla_list"]
+    
 
     partial_check_price = functools.partial(get_ohlc, interval, None)
-    with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
+    with concurrent.futures.ProcessPoolExecutor(max_workers=5) as executor:
         #  return (yday_o, yday_h, yday_l, yday_c, db_yday_o, db_yday_h, db_yday_l,db_yday_c)
-        for pair, _ohlc in zip(dinside_bullish_gpz_list, executor.map(partial_check_price, dinside_bullish_gpz_list)):
+        for pair, _ohlc in zip(dsinside_camarilla_list, executor.map(partial_check_price, dsinside_camarilla_list)):
+            if _ohlc is not None:
+                close = _ohlc[3]
+                open = _ohlc[0]
+                h4 = dp[pair].get("H4")
+                l4 = dp[pair].get("L4")
+                logger.info(f"dsinside_camarilla_list {pair} open:{open} close:{close} h4:{h4} l4:{l4}")
+                if(open <= h4 and close>=h4):
+                    logger.info(f" {pair} matched h4 dsinside_camarilla_list")
+                    await handler.send_message(chat_id = chat_id,  msg=f"{pair} @ {close} crossing Daily-H4 @ {tc}", topic=config.get("d_h4_breakout"))
+                
+                if(open >= l4 and close<=l4):
+                    logger.info(f" {pair} matched l4 dsinside_camarilla_list")
+                    await handler.send_message(chat_id = chat_id,  msg=f"{pair} @ {close} crossing Daily-L4 @ {tc}", topic=config.get("d_l4_breakdown"))
+        
+        for pair, _ohlc in zip(wsinside_camarilla_list, executor.map(partial_check_price, wsinside_camarilla_list)):
+            if _ohlc is not None:
+                close = _ohlc[3]
+                open = _ohlc[0]
+                h4 = wp[pair].get("H4")
+                l4 = wp[pair].get("L4")
+                logger.info(f"winside_camarilla_list {pair} open:{open} close:{close} h4:{h4} l4:{l4}")
+                if(open <= h4 and close>=h4):
+                    logger.info(f" {pair} matched h4 wsinside_camarilla_list")
+                    await handler.send_message(chat_id = chat_id,  msg=f"{pair} @ {close} crossing Week-H4 @ {tc}", topic=config.get("w_h4_breakout"))
+                
+                if(open >= l4 and close<=l4):
+                    logger.info(f" {pair} matched l4 wsinside_camarilla_list")
+                    await handler.send_message(chat_id = chat_id,  msg=f"{pair} @ {close} crossing Week-L4 @ {tc}", topic=config.get("w_l4_breakdown"))
+
+        for pair, _ohlc in zip(msinside_camarilla_list, executor.map(partial_check_price, msinside_camarilla_list)):
+            if _ohlc is not None:
+                close = _ohlc[3]
+                open = _ohlc[0]
+                h4 = mp[pair].get("H4")
+                l4 = mp[pair].get("L4")
+                logger.info(f"minside_camarilla_list {pair} open:{open} close:{close} h4:{h4} l4:{l4}")
+                if(open <= h4 and close>=h4):
+                    logger.info(f" {pair} matched h4 minside_camarilla_list")
+                    await handler.send_message(chat_id = chat_id,  msg=f"{pair} @ {close} crossing month-H4 @ {tc}", topic=config.get("m_h4_breakout"))
+                
+                if(open >= l4 and close<=l4):
+                    logger.info(f" {pair} matched l4 minside_camarilla_list")
+                    await handler.send_message(chat_id = chat_id,  msg=f"{pair} @ {close} crossing month-L4 @ {tc}", topic=config.get("m_l4_breakdown"))
+
+        for pair, _ohlc in zip(dbullish_gpz_list, executor.map(partial_check_price, dbullish_gpz_list)):
             
             if _ohlc is not None:
                 close = _ohlc[3]
                 open = _ohlc[0]
                 tc = dp[pair].get("tday_tc")
-                logger.info(f"dinside_bullish_gpz_list {pair} open:{open} close:{close} tc:{tc}")
+                logger.info(f"dbullish_gpz_list {pair} open:{open} close:{close} tc:{tc}")
                 if(open <= tc and close>=tc):
-                    logger.info(f" {pair} matched dinside_bullish_gpz_list")
+                    logger.info(f" {pair} matched dbullish_gpz_list")
                     await handler.send_message(chat_id = chat_id,  msg=f"{pair} @ {close} crossing Daily-TC @ {tc}", topic=config.get("d_gpz_breakout"))
                 
-        for pair, _ohlc in zip(winside_bullish_gpz_list, executor.map(partial_check_price, winside_bullish_gpz_list)):
+        for pair, _ohlc in zip(wbullish_gpz_list, executor.map(partial_check_price, wbullish_gpz_list)):
       
             if _ohlc is not None:
                 close = _ohlc[3]
                 open = _ohlc[0]
                 tc = wp[pair].get("tday_tc")
-                logger.info(f" winside_bullish_gpz_list {pair} open:{open} close:{close} tc:{tc}")
+                logger.info(f" wbullish_gpz_list {pair} open:{open} close:{close} tc:{tc}")
                 if(open <= tc and close>=tc):
-                    logger.info(f"********* {pair} matched winside_bullish_gpz_list")
+                    logger.info(f"********* {pair} matched wbullish_gpz_list")
                     await handler.send_message(chat_id = chat_id,  msg=f"{pair} @ {close} crossing Week-TC @ {tc}", topic=config.get("w_gpz_breakout"))
                 
-        for pair, _ohlc in zip(minside_bullish_gpz_list, executor.map(partial_check_price, minside_bullish_gpz_list)):
+        for pair, _ohlc in zip(mbullish_gpz_list, executor.map(partial_check_price, mbullish_gpz_list)):
         
             if _ohlc is not None:
                 close = _ohlc[3]
                 open = _ohlc[0]
                 tc = mp[pair].get("tday_tc")
-                logger.info(f"minside_bullish_gpz_list {pair} open:{open} close:{close} tc:{tc}")
+                logger.info(f"mbullish_gpz_list {pair} open:{open} close:{close} tc:{tc}")
                 if(open <= tc and close>=tc):
-                    logger.info(f"********* {pair} matched minside_bullish_gpz_list")
+                    logger.info(f"********* {pair} matched mbullish_gpz_list")
                     await handler.send_message(chat_id = chat_id,  msg=f"{pair} @ {close} crossing Monthly-TC @ {tc}", topic=config.get("m_gpz_breakout"))
 
-        for pair, _ohlc in zip(dinside_bearish_gpz_list, executor.map(partial_check_price, dinside_bearish_gpz_list)):
+        for pair, _ohlc in zip(dbearish_gpz_list, executor.map(partial_check_price, dbearish_gpz_list)):
             
             if _ohlc is not None:
                 close = _ohlc[3]
                 open = _ohlc[0]
                 bc = dp[pair].get("tday_bc")
-                logger.info(f"dinside_bearish_gpz_list {pair} open:{open} close:{close}  bc:{bc}")
+                logger.info(f"dbearish_gpz_list {pair} open:{open} close:{close}  bc:{bc}")
                 if(open >= bc and close<=bc):
-                    logger.info(f"********* {pair} matched dinside_bearish_gpz_list")
+                    logger.info(f"********* {pair} matched dbearish_gpz_list")
                     await handler.send_message(chat_id = chat_id,  msg=f"{pair} @ {close} crossing Daily-BC @ {bc}", topic=config.get("d_gpz_breakdown"))
                 
-        for pair, _ohlc in zip(winside_bearish_gpz_list, executor.map(partial_check_price, winside_bearish_gpz_list)):
+        for pair, _ohlc in zip(wbearish_gpz_list, executor.map(partial_check_price, wbearish_gpz_list)):
             
             if _ohlc is not None:
                 close = _ohlc[3]
                 open = _ohlc[0]
                 bc = wp[pair].get("tday_bc")
-                logger.info(f"winside_bearish_gpz_list {pair} open:{open} close:{close} bc:{bc}")
+                logger.info(f"wbearish_gpz_list {pair} open:{open} close:{close} bc:{bc}")
                 if(open >= bc and close<=bc):
-                    logger.info(f"********* {pair} matched winside_bearish_gpz_list")
+                    logger.info(f"********* {pair} matched wbearish_gpz_list")
                     await handler.send_message(chat_id = chat_id,  msg=f"{pair} @ {close} crossing Week-BC @ {bc}", topic=config.get("w_gpz_breakdown"))
                 
-        for pair, _ohlc in zip(minside_bearish_gpz_list, executor.map(partial_check_price, minside_bearish_gpz_list)):
+        for pair, _ohlc in zip(mbearish_gpz_list, executor.map(partial_check_price, mbearish_gpz_list)):
             
             if _ohlc is not None:
                 close = _ohlc[3]
                 open = _ohlc[0]
                 bc = mp[pair].get("tday_bc")
-                logger.info(f"minside_bearish_gpz_list {pair} open:{open} close:{close} bc:{bc}")
+                logger.info(f"mbearish_gpz_list {pair} open:{open} close:{close} bc:{bc}")
                 if(open >= bc and close<=bc):
-                    logger.info(f"********* {pair} matched minside_bearish_gpz_list")
+                    logger.info(f"********* {pair} matched mbearish_gpz_list")
                     await handler.send_message(chat_id = chat_id,  msg=f"{pair} @ {close} crossing Monthly-BC @ {bc}", topic=config.get("m_gpz_breakdown"))
 
 
@@ -540,8 +591,6 @@ async def run_filters(context: ContextTypes.DEFAULT_TYPE, pivot_map, script_list
     just_narrow_list=[]
     bullish_gpz_list =[]
     bearish_gpz_list =[]
-    filtered_bullish_gpz_list =[]
-    filtered_bearish_gpz_list =[]
     inside_camarilla_list =[]
     inside_bullish_gpz_list =[]
     inside_bearish_gpz_list =[]
@@ -619,20 +668,22 @@ async def prepare_output(pivot_map, context: ContextTypes.DEFAULT_TYPE) -> None:
     bullish_gpz_list = pivot_map[type]["bullish_gpz_list"]
 
     topic = config[type]
+    watchlist=""
+    message=""
     # (watchlist, message) =prepare_list("*** Long  (narrow + (hv/ohv/inside_cpr)", long_list, "","")
     # (watchlist, message) =prepare_list("*** Short (narrow + (lv/olv/inside_cpr)", short_list, watchlist, message)
     # await handler.send_message(chat_id = chat_id,  msg=message, topic=topic)
 
-    (watchlist, message) =prepare_list("Inside Bearish GPZ", inside_bearish_gpz_list, "", "")
-    (watchlist, message) =prepare_list("Inside Bullish GPZ", inside_bullish_gpz_list, watchlist, message)
-    await handler.send_message(chat_id = chat_id,  msg=message, topic=topic)
+    # (watchlist, message) =prepare_list("Inside Bearish GPZ", inside_bearish_gpz_list, "", "")
+    # (watchlist, message) =prepare_list("Inside Bullish GPZ", inside_bullish_gpz_list, watchlist, message)
+    # await handler.send_message(chat_id = chat_id,  msg=message, topic=topic)
 
     # (watchlist, message) =prepare_list("*** Bearish GPZ (narrow + (lv/olv/inside_cpr)", filtered_bearish_gpz_list, watchlist, "")
     # (watchlist, message) =prepare_list("*** Bullish GPZ (narrow + (hv/ohv/inside_cpr)", filtered_bullish_gpz_list, watchlist, message)
     # await handler.send_message(chat_id = chat_id,  msg=message, topic=topic)
 
     
-    (watchlist, message) = prepare_list("Inside Camarilla", inside_camarilla_list, watchlist, "")
+    (watchlist, message) = prepare_list("Inside Camarilla", inside_camarilla_list, watchlist, message)
     (watchlist, message) = prepare_list("Inside Cpr", inside_cpr_list, watchlist, message)
     (watchlist, message) = prepare_list("Narrow Cpr", narrow_list, watchlist, message)
     (watchlist, message) =prepare_list("Bearish GPZ", bearish_gpz_list, watchlist, message)
@@ -704,9 +755,11 @@ def filter(pivot_map, type, pair) :
             if(tday_tc <= yday_tc and tday_bc > yday_bc):
                 inside = True
             
-            
+            #H3 is within TC and BC 
             if ((H3 <= tday_tc and H3 > tday_bc) or (H3 < tday_tc and H3 >= tday_bc)) :
                 bearish_gpz = True
+
+            #L3 is within TC and BC.
             if ((L3 <= tday_tc and L3 > tday_bc) or (L3 < tday_tc and L3 >= tday_bc)):
                 bullish_gpz = True
 
@@ -802,12 +855,19 @@ config={
     "day":353,
     "week":354,
     "month":355,
-    "m_gpz_breakout":449,
-    "m_gpz_breakdown":451,
-    "w_gpz_breakout":356,
-    "w_gpz_breakdown":358,
+    "m_gpz_breakout":349,
+    "m_gpz_breakdown":350,
+    "w_gpz_breakout":349,
+    "w_gpz_breakdown":350,
     "d_gpz_breakout":349,
     "d_gpz_breakdown":350,
+
+    "d_h4_breakout":449,
+    "d_l4_breakdown":451,
+    "w_h4_breakout":449,
+    "w_l4_breakdown":451,
+    "m_h4_breakout":449,
+    "m_l4_breakdown":451,
 }
 
 def round_dt(dt, delta):
