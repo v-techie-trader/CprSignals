@@ -729,6 +729,9 @@ def filter(pivot_map, type, pair) :
             H3 = _pivots.get("H3")
             L3 = _pivots.get("L3")
         
+            YH3 = _pivots.get("YH3")
+            YL3 = _pivots.get("YL3")
+
             H4 = _pivots.get("H4")
             L4 = _pivots.get("L4")
         
@@ -763,7 +766,7 @@ def filter(pivot_map, type, pair) :
             if ((L3 <= tday_tc and L3 > tday_bc) or (L3 < tday_tc and L3 >= tday_bc)):
                 bullish_gpz = True
 
-            if (H4 <= YH4 and L4 >= YL4):
+            if (H3 <= YH3 and L3 >= YL3):
                 inside_camarilla = True
             # logger.info(f"{pair} =>  {ascending}, {descending}, {oascending}, {odescending}, {inside}, {narrow_cpr} {(tday_tc - tday_bc)} { yday_c * 0.001} {bearish_gpz} {bullish_gpz}")
 
