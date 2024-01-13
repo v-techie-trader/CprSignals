@@ -350,7 +350,7 @@ async def today_signals(update: Update, context: ContextTypes.DEFAULT_TYPE):
             
         }
     
-    await handler.send_message(chat_id=context._chat_id, msg=f"Loading Daily Pivots from {start_str} pls wait for few minutes.....", topic=config.get("day"))
+    # await handler.send_message(chat_id=context._chat_id, msg=f"Loading Daily Pivots from {start_str} pls wait for few minutes.....", topic=config.get("day"))
     # context.job_queue.run_daily(update_pivots, time=datetime.time(hour=1, minute=0), conmsg=[update.message.chat_id, list])
     # context.job_queue.run_once(update_pivots, when=poll, conmsg=[update.message.chat_id, list, poll, "day", interval, start_str, context.args])
     context.job_queue.run_once(update_pivots, when=poll, data=data)
@@ -362,7 +362,7 @@ async def week_signals(update: Update, context: ContextTypes.DEFAULT_TYPE):
     interval = Client.KLINE_INTERVAL_1WEEK
     dat = date.today() + relativedelta(weeks=-3, weekday=MO(0))
     start_str = dat.strftime('%d %B %Y')
-    await handler.send_message(chat_id=context._chat_id, msg=f"Loading Weekly Pivots from {start_str} pls wait for few minutes.....", topic=config.get("week"))
+    # await handler.send_message(chat_id=context._chat_id, msg=f"Loading Weekly Pivots from {start_str} pls wait for few minutes.....", topic=config.get("week"))
     # context.job_queue.run_daily(update_pivots, time=datetime.time(hour=1, minute=0), conmsg=[update.message.chat_id, list])
     # context.job_queue.run_once(update_pivots, when=poll, conmsg=[update.message.chat_id, list, poll, "week",interval, start_str, context.args])
     data={
@@ -382,7 +382,7 @@ async def month_signals(update: Update, context: ContextTypes.DEFAULT_TYPE):
     interval = Client.KLINE_INTERVAL_1MONTH    
     dat =  date.today().replace(day=1) - relativedelta(months=2,)
     start_str = dat.strftime('%d %B %Y')
-    await handler.send_message(chat_id=context._chat_id, msg=f"Loading Monthly Pivots from {start_str} pls wait for few minutes.....", topic=config.get("month"))
+    # await handler.send_message(chat_id=context._chat_id, msg=f"Loading Monthly Pivots from {start_str} pls wait for few minutes.....", topic=config.get("month"))
     # context.job_queue.run_daily(update_pivots, time=datetime.time(hour=1, minute=0), conmsg=[update.message.chat_id, list])
     # context.job_queue.run_once(update_pivots, when=poll, conmsg=[update.message.chat_id, list, poll, "month", interval, start_str, context.args])
     data={
@@ -400,20 +400,20 @@ async def check_break(context: ContextTypes.DEFAULT_TYPE) -> None:
     chat_id = context.job.data["chat_id"]
     interval = Client.KLINE_INTERVAL_5MINUTE
     logger.info(f"Checking Break")
-    dp = pivot_map["day"]
-    dbullish_gpz_list = dp["filtered_bullish_gpz_list"]
-    dbearish_gpz_list = dp["filtered_bearish_gpz_list"]
-    dsinside_camarilla_list = dp["inside_camarilla_list"]
+    dp = pivot_map.get("day",{})
+    dbullish_gpz_list = dp.get("filtered_bullish_gpz_list",[])
+    dbearish_gpz_list = dp.get("filtered_bearish_gpz_list",[])
+    dsinside_camarilla_list = dp.get("inside_camarilla_list",[])
     
-    wp = pivot_map["week"]
-    wbullish_gpz_list = wp["filtered_bullish_gpz_list"]
-    wbearish_gpz_list = wp["filtered_bearish_gpz_list"]
-    wsinside_camarilla_list = wp["inside_camarilla_list"]
+    wp = pivot_map.get("week",{})
+    wbullish_gpz_list = wp.get("filtered_bullish_gpz_list",[])
+    wbearish_gpz_list = wp.get("filtered_bearish_gpz_list",[])
+    wsinside_camarilla_list = wp.get("inside_camarilla_list",[])
     
-    mp = pivot_map["month"]
-    mbullish_gpz_list = mp["filtered_bullish_gpz_list"]
-    mbearish_gpz_list = mp["filtered_bearish_gpz_list"]
-    msinside_camarilla_list = mp["inside_camarilla_list"]
+    mp = pivot_map.get("month",{})
+    mbullish_gpz_list = mp.get("filtered_bullish_gpz_list",[])
+    mbearish_gpz_list = mp.get("filtered_bearish_gpz_list",[])
+    msinside_camarilla_list = mp.get("inside_camarilla_list",[])
     
 
     partial_check_price = functools.partial(get_ohlc, interval, None)
@@ -542,9 +542,10 @@ async def fetch_data(context: ContextTypes.DEFAULT_TYPE) -> None:
     interval = context.job.data["interval"]
     start_str = context.job.data["start_str"]
     args = context.job.data.get("args",[])
+    chat_id = context.job.data["chat_id"]
     logger.info(f"Loading Pivots poll {type}: {_poll}")
     pivot_map[type]={}
-    await handler.send_message(chat_id=context._chat_id, msg=f"Loading {type} Pivots from {start_str} pls wait for few minutes.....", topic=config.get(type))
+    await handler.send_message(chat_id=chat_id, msg=f"Loading {type} Pivots from {start_str} pls wait for few minutes.....", topic=config.get(type))
     count = 0
     total = len(script_list)
     partial_check_price = functools.partial(get_cprs, type, interval, start_str)
@@ -577,7 +578,7 @@ def prepare_list(name, script_list, watchlist="", message=""):
             symbol2_=f"BINANCE:{symbol2}PERP"
             chart_link2= f"https://in.tradingview.com/chart?symbol={symbol2_}"
             text+=f"|  <a href='{chart_link2}'>{symbol2:<10}</a>"
-            text+=f"|  <i>{symbol2:<10}</i>"
+            # text+=f"|  <i>{symbol2:<10}</i>"
             watch+=f"{symbol2_},"
     text+="\n|\n"
     return watchlist+watch, message+text
@@ -825,7 +826,7 @@ def main():
             "interval": interval,
             "start_str": dstart_str,
         }
-    dp.job_queue.run_daily(fetch_data, name="daily_update_daily_pivots", time=datetime.time(hour=1, minute=0), data=data)
+    dp.job_queue.run_daily(fetch_data, name="daily_update_daily_pivots", time=datetime.time(hour=0, minute=10).astimezone(pytz.utc), data=data)
     dp.job_queue.run_once(fetch_data, name="once_update_daily_pivots", when=1, data=data)
 
 
@@ -839,7 +840,7 @@ def main():
         "interval": winterval,
         "start_str": wstart_str,
     }
-    dp.job_queue.run_daily(fetch_data, name="daily_update_week_pivots", time=datetime.time(hour=1, minute=0), data=wdata)
+    dp.job_queue.run_daily(fetch_data, name="daily_update_week_pivots", time=datetime.time(hour=0, minute=10).astimezone(pytz.utc), data=wdata)
     dp.job_queue.run_once(fetch_data, name="once_update_week_pivots",  when=60, data=wdata)
 
     minterval = Client.KLINE_INTERVAL_1MONTH    
@@ -852,7 +853,7 @@ def main():
         "interval": minterval,
         "start_str": mstart_str,
     }
-    dp.job_queue.run_daily(fetch_data, name="daily_update_monthly_pivots", time=datetime.time(hour=1, minute=0), data=mdata)
+    dp.job_queue.run_daily(fetch_data, name="daily_update_monthly_pivots", time=datetime.time(hour=0, minute=10).astimezone(pytz.utc), data=mdata)
     dp.job_queue.run_once(fetch_data, name="once_update_monthly_pivots", when=120, data=mdata)
 
     t=datetime.datetime.now() #+timedelta(minutes=10)
