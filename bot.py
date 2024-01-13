@@ -428,11 +428,11 @@ async def check_break(context: ContextTypes.DEFAULT_TYPE) -> None:
                 logger.info(f"dsinside_camarilla_list {pair} open:{open} close:{close} h4:{h4} l4:{l4}")
                 if(open <= h4 and close>=h4):
                     logger.info(f" {pair} matched h4 dsinside_camarilla_list")
-                    await handler.send_message(chat_id = chat_id,  msg=f"[DAILY] {pair} @ {close} crossing Daily-H4 @ {tc}", topic=config.get("d_h4_breakout"))
+                    await handler.send_message(chat_id = chat_id,  msg=f"[DAILY] {pair} @ {close} crossing Daily-H4 @ {h4}", topic=config.get("d_h4_breakout"))
                 
                 if(open >= l4 and close<=l4):
                     logger.info(f" {pair} matched l4 dsinside_camarilla_list")
-                    await handler.send_message(chat_id = chat_id,  msg=f"[DAILY] {pair} @ {close} crossing Daily-L4 @ {tc}", topic=config.get("d_l4_breakdown"))
+                    await handler.send_message(chat_id = chat_id,  msg=f"[DAILY] {pair} @ {close} crossing Daily-L4 @ {l4}", topic=config.get("d_l4_breakdown"))
         
         for pair, _ohlc in zip(wsinside_camarilla_list, executor.map(partial_check_price, wsinside_camarilla_list)):
             if _ohlc is not None:
@@ -443,11 +443,11 @@ async def check_break(context: ContextTypes.DEFAULT_TYPE) -> None:
                 logger.info(f"winside_camarilla_list {pair} open:{open} close:{close} h4:{h4} l4:{l4}")
                 if(open <= h4 and close>=h4):
                     logger.info(f" {pair} matched h4 wsinside_camarilla_list")
-                    await handler.send_message(chat_id = chat_id,  msg=f"[WEEK] {pair} @ {close} crossing Week-H4 @ {tc}", topic=config.get("w_h4_breakout"))
+                    await handler.send_message(chat_id = chat_id,  msg=f"[WEEK] {pair} @ {close} crossing Week-H4 @ {h4}", topic=config.get("w_h4_breakout"))
                 
                 if(open >= l4 and close<=l4):
                     logger.info(f" {pair} matched l4 wsinside_camarilla_list")
-                    await handler.send_message(chat_id = chat_id,  msg=f"[WEEK] {pair} @ {close} crossing Week-L4 @ {tc}", topic=config.get("w_l4_breakdown"))
+                    await handler.send_message(chat_id = chat_id,  msg=f"[WEEK] {pair} @ {close} crossing Week-L4 @ {l4}", topic=config.get("w_l4_breakdown"))
 
         for pair, _ohlc in zip(msinside_camarilla_list, executor.map(partial_check_price, msinside_camarilla_list)):
             if _ohlc is not None:
@@ -458,11 +458,11 @@ async def check_break(context: ContextTypes.DEFAULT_TYPE) -> None:
                 logger.info(f"minside_camarilla_list {pair} open:{open} close:{close} h4:{h4} l4:{l4}")
                 if(open <= h4 and close>=h4):
                     logger.info(f" {pair} matched h4 minside_camarilla_list")
-                    await handler.send_message(chat_id = chat_id,  msg=f"[MONTH] {pair} @ {close} crossing month-H4 @ {tc}", topic=config.get("m_h4_breakout"))
+                    await handler.send_message(chat_id = chat_id,  msg=f"[MONTH] {pair} @ {close} crossing month-H4 @ {h4}", topic=config.get("m_h4_breakout"))
                 
                 if(open >= l4 and close<=l4):
                     logger.info(f" {pair} matched l4 minside_camarilla_list")
-                    await handler.send_message(chat_id = chat_id,  msg=f"[MONTH] {pair} @ {close} crossing month-L4 @ {tc}", topic=config.get("m_l4_breakdown"))
+                    await handler.send_message(chat_id = chat_id,  msg=f"[MONTH] {pair} @ {close} crossing month-L4 @ {l4}", topic=config.get("m_l4_breakdown"))
 
         for pair, _ohlc in zip(dbullish_gpz_list, executor.map(partial_check_price, dbullish_gpz_list)):
             
@@ -544,7 +544,7 @@ async def fetch_data(context: ContextTypes.DEFAULT_TYPE) -> None:
     args = context.job.data.get("args",[])
     logger.info(f"Loading Pivots poll {type}: {_poll}")
     pivot_map[type]={}
-    
+    await handler.send_message(chat_id=context._chat_id, msg=f"Loading {type} Pivots from {start_str} pls wait for few minutes.....", topic=config.get(type))
     count = 0
     total = len(script_list)
     partial_check_price = functools.partial(get_cprs, type, interval, start_str)
@@ -570,13 +570,13 @@ def prepare_list(name, script_list, watchlist="", message=""):
     for symbol1, symbol2 in zips:
         symbol1_=f"BINANCE:{symbol1}PERP"
         chart_link1= f"https://in.tradingview.com/chart?symbol={symbol1_}"
-        # text+=f"\n|------ <a href='{chart_link1}'>{symbol1:<10}</a>"
-        text+=f"\n|------ <i>{symbol1:<10}</i>"
+        text+=f"\n|------ <a href='{chart_link1}'>{symbol1:<10}</a>"
+        # text+=f"\n|------ <i>{symbol1:<10}</i>"
         watch+=f"{symbol1_},"
         if(symbol2):
             symbol2_=f"BINANCE:{symbol2}PERP"
             chart_link2= f"https://in.tradingview.com/chart?symbol={symbol2_}"
-            # text+=f"|  <a href='{chart_link2}'>{symbol2:<10}</a>"
+            text+=f"|  <a href='{chart_link2}'>{symbol2:<10}</a>"
             text+=f"|  <i>{symbol2:<10}</i>"
             watch+=f"{symbol2_},"
     text+="\n|\n"
@@ -692,12 +692,12 @@ async def prepare_output(pivot_map, context: ContextTypes.DEFAULT_TYPE) -> None:
     # await handler.send_message(chat_id = chat_id,  msg=message, topic=topic)
 
     
-    (watchlist, message) = prepare_list("Inside Camarilla", inside_camarilla_list, "", "")
+    (watchlist, message) = prepare_list("Inside Camarilla", inside_camarilla_list, watchlist, "")
     (watchlist, message) = prepare_list("Inside Cpr", inside_cpr_list, watchlist, message)
     (watchlist, message) = prepare_list("Narrow Cpr", narrow_list, watchlist, message)
     await handler.send_message(chat_id = chat_id,  msg=message, topic=topic)
 
-    (watchlist, message) =prepare_list("Bearish GPZ", bearish_gpz_list, "", "")
+    (watchlist, message) =prepare_list("Bearish GPZ", bearish_gpz_list, watchlist, "")
     (watchlist, message) =prepare_list("Bullish GPZ", bullish_gpz_list, watchlist, message)
     await handler.send_message(chat_id = chat_id,  msg=message, topic=topic)
 
