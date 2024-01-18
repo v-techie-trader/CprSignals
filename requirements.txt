@@ -30,5 +30,5 @@ django==4.1.2
 djangorestframework
 django-health-check
 requests
-
+more-itertools
 pandas
