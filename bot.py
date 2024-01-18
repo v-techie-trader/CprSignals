@@ -5,7 +5,8 @@ from math import ceil, floor
 import os
 from queue import Empty
 import traceback
-
+import more_itertools as mit
+import tradingview_ta as ta
 from binance.enums import HistoricalKlinesType
 import pytz
 from client import Client
@@ -60,138 +61,254 @@ vlist = [
     "BNBUSDT"
 ]
 script_list = [
-"BTCUSDT",
-"ETHUSDT",
-"BCHUSDT",
-"XRPUSDT",
-"EOSUSDT",
-"LTCUSDT",
+"SUIUSDT",
+"IDUSDT",
+"BLURUSDT",
+"XVSUSDT",
 "TRXUSDT",
-"ETCUSDT",
-"LINKUSDT",
-"XLMUSDT",
-"ADAUSDT",
-"XMRUSDT",
-"DASHUSDT",
-"ZECUSDT",
-"XTZUSDT",
-"BNBUSDT",
-"ATOMUSDT",
-"ONTUSDT",
-"IOTAUSDT",
-"BATUSDT",
-"VETUSDT",
-"NEOUSDT",
-"QTUMUSDT",
-"IOSTUSDT",
-"THETAUSDT",
-"ALGOUSDT",
-"ZILUSDT",
-"KNCUSDT",
-"ZRXUSDT",
-"COMPUSDT",
-"OMGUSDT",
-"DOGEUSDT",
-"SXPUSDT",
-"KAVAUSDT",
+"BICOUSDT",
+"ASTRUSDT",
+"COMBOUSDT",
+"APTUSDT",
+"SEIUSDT",
+"FXSUSDT",
+"TOKENUSDT",
+"SFPUSDT",
+"MINAUSDT",
+"HOTUSDT",
+"ARPAUSDT",
+"TIAUSDT",
+"GALAUSDT",
+"CHRUSDT",
+"PYTHUSDT",
+"XVGUSDT",
+"UNFIUSDT",
+"ICPUSDT",
+"YGGUSDT",
+"LEVERUSDT",
+"DODOXUSDT",
+"ALPHAUSDT",
+"1000SATSUSDT",
 "BANDUSDT",
-"RLCUSDT",
-"WAVESUSDT",
-"MKRUSDT",
-"SNXUSDT",
-"DOTUSDT",
-"YFIUSDT",
-"BALUSDT",
-"CRVUSDT",
-"TRBUSDT",
-"RUNEUSDT",
-"SUSHIUSDT",
-"EGLDUSDT",
-"SOLUSDT",
-"ICXUSDT",
-"STORJUSDT",
-"BLZUSDT",
-"UNIUSDT",
-"AVAXUSDT",
-"FTMUSDT",
+"CELOUSDT",
+"QNTUSDT",
+"WOOUSDT",
+"DARUSDT",
+"TLMUSDT",
+"NKNUSDT",
+"MOVRUSDT",
+"FOOTBALLUSDT",
+"MEMEUSDT",
 "ENJUSDT",
-"FLMUSDT",
+"GALUSDT",
+"RUNEUSDT",
+"TRUUSDT",
+"1INCHUSDT",
+"DENTUSDT",
+"FLOWUSDT",
+"DYDXUSDT",
+"HOOKUSDT",
+"STMXUSDT",
+"KEYUSDT",
+"LQTYUSDT",
+"AAVEUSDT",
+"CFXUSDT",
+"BLZUSDT",
+"SPELLUSDT",
+"1000FLOKIUSDT",
+"THETAUSDT",
+"MDTUSDT",
+"FRONTUSDT",
+"REEFUSDT",
+"CTKUSDT",
+"OXTUSDT",
+"EGLDUSDT",
+"POLYXUSDT",
+"LINAUSDT",
+"ENSUSDT",
+"KLAYUSDT",
+"SKLUSDT",
+"AXSUSDT",
+"PERPUSDT",
+"RSRUSDT",
+"PENDLEUSDT",
+"BNTUSDT",
+"1000SHIBUSDT",
+"XEMUSDT",
+"COMPUSDT",
+"MBLUSDT",
+"1000RATSUSDT",
+"YFIUSDT",
+"IOSTUSDT",
+"AUDIOUSDT",
+"ANKRUSDT",
+"XTZUSDT",
+"CRVUSDT",
+"FTMUSDT",
+"OCEANUSDT",
+"HBARUSDT",
+"1000PEPEUSDT",
+"SOLUSDT",
+"RNDRUSDT",
+"SSVUSDT",
+"XLMUSDT",
+"ATOMUSDT",
+"GMTUSDT",
+"DGBUSDT",
+"BNBUSDT",
+"ARUSDT",
+"CKBUSDT",
+"MKRUSDT",
+"IDEXUSDT",
+"BNXUSDT",
+"LDOUSDT",
+"BTCDOMUSDT",
+"ETHBTC",
+"BELUSDT",
+"CVXUSDT",
+"GTCUSDT",
+"HIGHUSDT",
+"LOOMUSDT",
+"RLCUSDT",
+"BEAMXUSDT",
+"STGUSDT",
+"UMAUSDT",
+"ADAUSDT",
+"RADUSDT",
+"1000LUNCUSDT",
+"INJUSDT",
+"AMBUSDT",
+"SLPUSDT",
+"STORJUSDT",
+"DEFIUSDT",
+"MAGICUSDT",
+"MATICUSDT",
+"XRPUSDT",
+"UNIUSDT",
+"STPTUSDT",
+"BLUEBIRDUSDT",
+"LITUSDT",
+"ICXUSDT",
+"WAXPUSDT",
+"ETHUSDT",
+"BTCUSDT",
+"RIFUSDT",
+"MTLUSDT",
+"KNCUSDT",
+"ACHUSDT",
+"SANDUSDT",
+"WAVESUSDT",
+"ALGOUSDT",
+"COTIUSDT",
+"JOEUSDT",
+"ZILUSDT",
+"TWTUSDT",
+"WLDUSDT",
+"ANTUSDT",
+"IOTAUSDT",
+"AGIXUSDT",
+"USTCUSDT",
+"DOTUSDT",
+"AVAXUSDT",
+"ILVUSDT",
+"ALICEUSDT",
+"XMRUSDT",
+"JASMYUSDT",
+"CAKEUSDT",
 "RENUSDT",
+"TRBUSDT",
+"ARBUSDT",
+"FETUSDT",
+"STRAXUSDT",
+"KAVAUSDT",
+"IMXUSDT",
+"ROSEUSDT",
+"HIFIUSDT",
+"DASHUSDT",
+"NTRNUSDT",
+"NEOUSDT",
+"MANAUSDT",
+"RVNUSDT",
+"BADGERUSDT",
+"RDNTUSDT",
+"API3USDT",
+"LUNA2USDT",
+"LRCUSDT",
+"CTSIUSDT",
+"STEEMUSDT",
+"EOSUSDT",
+"EDUUSDT",
+"BATUSDT",
+"ORBSUSDT",
+"ATAUSDT",
+"SXPUSDT",
+"LINKUSDT",
+"ONEUSDT",
+"1000BONKUSDT",
+"ZENUSDT",
+"DOGEUSDT",
+"QTUMUSDT",
+"NMRUSDT",
+"BIGTIMEUSDT",
+"CELRUSDT",
+"SUSHIUSDT",
+"MASKUSDT",
+"ONTUSDT",
+"ZRXUSDT",
+"APEUSDT",
+"ARKMUSDT",
+"ONGUSDT",
+"IOTXUSDT",
+"GMXUSDT",
+"HFTUSDT",
+"OGNUSDT",
+"ORDIUSDT",
+"GLMRUSDT",
+"BALUSDT",
+"GRTUSDT",
+"FLMUSDT",
+"1000XECUSDT",
+"AUCTIONUSDT",
+"FILUSDT",
+"DUSKUSDT",
+"SUPERUSDT",
+"OMGUSDT",
+"CHZUSDT",
+"SNXUSDT",
+"GASUSDT",
+"SNTUSDT",
+"BONDUSDT",
+"PHBUSDT",
+"VETUSDT",
+"ZECUSDT",
 "KSMUSDT",
 "NEARUSDT",
-"AAVEUSDT",
-"FILUSDT",
-"RSRUSDT",
-"LRCUSDT",
-"MATICUSDT",
-"OCEANUSDT",
-# "CVCUSDT",
-"BELUSDT",
-"CTKUSDT",
-"AXSUSDT",
-"ALPHAUSDT",
-"ZENUSDT",
-"SKLUSDT",
-"GRTUSDT",
-"1INCHUSDT",
-"CHZUSDT",
-"SANDUSDT",
-"ANKRUSDT",
-"LITUSDT",
-"UNFIUSDT",
-"REEFUSDT",
-"RVNUSDT",
-"SFPUSDT",
-"XEMUSDT",
-# "BTCSTUSDT",
-"COTIUSDT",
-"CHRUSDT",
-"MANAUSDT",
-"ALICEUSDT",
-"HBARUSDT",
-"ONEUSDT",
-"LINAUSDT",
-"STMXUSDT",
-"DENTUSDT",
-"CELRUSDT",
-"HOTUSDT",
-"MTLUSDT",
-"OGNUSDT",
-"NKNUSDT",
-"DGBUSDT",
-"ICPUSDT",
-"BAKEUSDT",
-"GTCUSDT",
-"IOTXUSDT",
-"AUDIOUSDT",
+"OPUSDT",
+"LTCUSDT",
+"KASUSDT",
+"ETHWUSDT",
+"CYBERUSDT",
+"STXUSDT",
+"ARKUSDT",
+"BCHUSDT",
+"NFPUSDT",
 "C98USDT",
-"MASKUSDT",
-"ATAUSDT",
-"DYDXUSDT",
-"GALAUSDT",
-"CELOUSDT",
-"ARUSDT",
-"KLAYUSDT",
-"ARPAUSDT",
-"CTSIUSDT",
-"LPTUSDT",
-"ENSUSDT",
+"BSVUSDT",
+"POWRUSDT",
 "PEOPLEUSDT",
-"ANTUSDT",
-"ROSEUSDT",
-"DUSKUSDT",
-"FLOWUSDT",
-"IMXUSDT",
-"GMTUSDT",
-"APEUSDT",
-"BNXUSDT",
-"WOOUSDT",
-# "FTTUSDT",
-"JASMYUSDT",
-"DARUSDT",
-"GALUSDT",
-"OPUSDT"
+"JTOUSDT",
+"MAVUSDT",
+"AGLDUSDT",
+"ACEUSDT",
+"TUSDT",
+"BAKEUSDT",
+"ETCUSDT",
+"LPTUSDT"
 ]
+
+global symbol_list
+symbol_list=None
+
 PORT = int(os.environ.get('PORT', '8443'))
 
 # We define command handlers. Error handlers also receive the raised TelegramError object in error.
@@ -530,7 +647,38 @@ async def check_break(context: ContextTypes.DEFAULT_TYPE) -> None:
                     logger.info(f"********* {pair} matched mbearish_gpz_list")
                     await handler.send_message(chat_id = chat_id,  msg=f"[MONTH] {pair} @ {close} crossing Monthly-BC @ {bc}", topic=config.get("m_gpz_breakdown"))
 
+        
+symbol_ta_list = list(mit.sliced([f"BINANCE:{pair}.P" for pair in script_list],20))
 
+async def check_30m_break(context: ContextTypes.DEFAULT_TYPE) -> None:
+    logger.info(f"Checking 30m Break")
+    chat_id = context.job.data["chat_id"]
+    partial_rsi = functools.partial(get_ta_analysis, interval=ta.Interval.INTERVAL_4_HOURS)
+    with concurrent.futures.ProcessPoolExecutor(max_workers=5) as executor:
+        
+        for pairs, analysis_dict in zip(symbol_ta_list, executor.map(partial_rsi, symbol_ta_list)):
+            logger.info(f" checking for RSI no of pairs: {len(pairs)}")
+            if analysis_dict is not None:
+                for pair, analysis in analysis_dict.items():
+                    if(analysis is not None):
+                        rsi = round(analysis.indicators["RSI"],1)
+                        rsi_prev = round(analysis.indicators["RSI[1]"],1)
+                        close = analysis.indicators["close"]
+                        if(rsi is None or rsi_prev is None):
+                            logger.info(f"---- Missing RSI for {pair}")
+                        elif(rsi_prev <=50 and rsi>=50):
+                            logger.info(f"********* {pair} 4hr RSI Breaking RSI-{rsi} prev-rsi-{rsi_prev}")
+                            await handler.send_message(chat_id = chat_id,  msg=f"{pair} @ {close} \n4hr RSI[{rsi}] crossing 50 -  PREV-RSI [{rsi_prev}]", topic=config.get("4hr_rsi_50_breakout"))
+                    else:
+                        logger.info(f"---- Missing analysis for {pair}")
+                        
+
+
+
+def get_ta_analysis(script_list, interval=ta.Interval.INTERVAL_1_DAY):
+    
+    return ta.get_multiple_analysis(screener="crypto", interval=interval, symbols=script_list)
+    
 
 async def update_pivots(context: ContextTypes.DEFAULT_TYPE) -> None:
     await fetch_data(context)
@@ -545,7 +693,7 @@ async def fetch_data(context: ContextTypes.DEFAULT_TYPE) -> None:
     chat_id = context.job.data["chat_id"]
     logger.info(f"Loading Pivots poll {type}: {_poll}")
     pivot_map[type]={}
-    await handler.send_message(chat_id=chat_id, msg=f"Loading {type} Pivots from {start_str} pls wait for few minutes.....", topic=config.get(type))
+    # await handler.send_message(chat_id=chat_id, msg=f"Loading {type} Pivots from {start_str} pls wait for few minutes.....", topic=config.get(type))
     count = 0
     total = len(script_list)
     partial_check_price = functools.partial(get_cprs, type, interval, start_str)
@@ -813,8 +961,13 @@ def main():
     
     # log all errors
     dp.add_error_handler(error)
-    # updater.start_webhook(listen="0.0.0.0", port=PORT, url_path=TOKEN, webhook_url=APP_NAME + TOKEN)
-
+    data={
+        "chat_id":-1001902874892,
+    }
+    t=datetime.datetime.now()
+    first_30m = round_dt(t, timedelta(minutes=30)).astimezone(pytz.utc)+timedelta(seconds=10)
+    dp.job_queue.run_repeating(check_30m_break, name="check_30m_break",  interval=30*60, first=first_30m, data=data)
+    dp.job_queue.run_once(check_30m_break, name="check_30m_break_once", when=1, data=data)
 
     dat = date.today() - timedelta(days=2)
     interval = Client.KLINE_INTERVAL_1DAY
@@ -826,8 +979,8 @@ def main():
             "interval": interval,
             "start_str": dstart_str,
         }
-    dp.job_queue.run_daily(fetch_data, name="daily_update_daily_pivots", time=datetime.time(hour=0, minute=10).replace(tzinfo=pytz.UTC), data=data)
-    dp.job_queue.run_once(fetch_data, name="once_update_daily_pivots", when=1, data=data)
+    dp.job_queue.run_daily(update_pivots, name="daily_update_daily_pivots", time=datetime.time(hour=0, minute=10).replace(tzinfo=pytz.UTC), data=data)
+    dp.job_queue.run_once(fetch_data, name="once_update_daily_pivots", when=60, data=data)
 
 
     winterval = Client.KLINE_INTERVAL_1WEEK
@@ -840,8 +993,8 @@ def main():
         "interval": winterval,
         "start_str": wstart_str,
     }
-    dp.job_queue.run_daily(fetch_data, name="daily_update_week_pivots", time=datetime.time(hour=0, minute=10).replace(tzinfo=pytz.UTC), data=wdata)
-    dp.job_queue.run_once(fetch_data, name="once_update_week_pivots",  when=60, data=wdata)
+    dp.job_queue.run_daily(update_pivots, name="daily_update_week_pivots", time=datetime.time(hour=0, minute=10).replace(tzinfo=pytz.UTC), data=wdata)
+    dp.job_queue.run_once(fetch_data, name="once_update_week_pivots",  when=120, data=wdata)
 
     minterval = Client.KLINE_INTERVAL_1MONTH    
     mdat =  date.today().replace(day=1) - relativedelta(months=2,)
@@ -853,11 +1006,11 @@ def main():
         "interval": minterval,
         "start_str": mstart_str,
     }
-    dp.job_queue.run_daily(fetch_data, name="daily_update_monthly_pivots", time=datetime.time(hour=0, minute=10).replace(tzinfo=pytz.UTC), data=mdata)
-    dp.job_queue.run_once(fetch_data, name="once_update_monthly_pivots", when=120, data=mdata)
+    dp.job_queue.run_daily(update_pivots, name="daily_update_monthly_pivots", time=datetime.time(hour=0, minute=10).replace(tzinfo=pytz.UTC), data=mdata)
+    dp.job_queue.run_once(fetch_data, name="once_update_monthly_pivots", when=180, data=mdata)
 
     t=datetime.datetime.now() #+timedelta(minutes=10)
-    first = round_dt(t, timedelta(minutes=5)).astimezone(pytz.utc)+timedelta(seconds=30)
+    first = round_dt(t, timedelta(minutes=5)).astimezone(pytz.utc)+timedelta(seconds=10)
     logger.info(f"{t.astimezone(pytz.utc)} checking for break every 5 mins starting {first}")
     check_data={
         "chat_id":-1001902874892
@@ -883,6 +1036,7 @@ config={
     "w_l4_breakdown":451,
     "m_h4_breakout":449,
     "m_l4_breakdown":451,
+    "4hr_rsi_50_breakout":1628,
 }
 
 def round_dt(dt, delta):
