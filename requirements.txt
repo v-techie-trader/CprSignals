@@ -31,4 +31,5 @@ djangorestframework
 django-health-check
 requests
 more-itertools
+tradingview-ta
 pandas
