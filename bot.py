@@ -1124,7 +1124,7 @@ def main():
         "start_str": mstart_str,
     }
     dp.job_queue.run_daily(update_pivots, name="daily_update_monthly_pivots", time=datetime.time(hour=0, minute=10).replace(tzinfo=pytz.UTC), data=mdata)
-    dp.job_queue.run_once(fetch_data, name="once_update_monthly_pivots", when=120, data=mdata)
+    dp.job_queue.run_once(fetch_data, name="once_update_monthly_pivots", when=150, data=mdata)
 
     data={
         "chat_id":-1001902874892,
@@ -1132,7 +1132,7 @@ def main():
     t=datetime.datetime.now()
     first_30m = round_dt(t, timedelta(minutes=30)).astimezone(pytz.utc)+timedelta(seconds=10)
     dp.job_queue.run_repeating(check_30m_break, name="check_30m_break",  interval=30*60, first=first_30m, data=data)
-    dp.job_queue.run_once(check_30m_break, name="check_30m_break_once", when=180, data=data)
+    dp.job_queue.run_once(check_30m_break, name="check_30m_break_once", when=210, data=data)
 
     t=datetime.datetime.now() #+timedelta(minutes=10)
     first = round_dt(t, timedelta(minutes=5)).astimezone(pytz.utc)+timedelta(seconds=10)
