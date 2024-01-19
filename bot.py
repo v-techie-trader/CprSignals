@@ -536,21 +536,37 @@ async def check_break(context: ContextTypes.DEFAULT_TYPE) -> None:
     partial_check_price = functools.partial(get_ohlc, interval, None)
     with concurrent.futures.ProcessPoolExecutor(max_workers=5) as executor:
         #  return (yday_o, yday_h, yday_l, yday_c, db_yday_o, db_yday_h, db_yday_l,db_yday_c)
+
+        long_text=""
+        short_text=""
         for pair, _ohlc in zip(dsinside_camarilla_list, executor.map(partial_check_price, dsinside_camarilla_list)):
             if _ohlc is not None:
                 close = _ohlc[3]
                 open = _ohlc[0]
-                h4 = dp[pair].get("H4")
-                l4 = dp[pair].get("L4")
+                h4 = _round(dp[pair].get("H4"))
+                l4 = _round(dp[pair].get("L4"))
                 logger.info(f"dsinside_camarilla_list {pair} open:{open} close:{close} h4:{h4} l4:{l4}")
                 if(open <= h4 and close>=h4):
                     logger.info(f" {pair} matched h4 dsinside_camarilla_list")
-                    await handler.send_message(chat_id = chat_id,  msg=f"[DAILY] {pair} @ {close} crossing Daily-H4 @ {h4}", topic=config.get("d_h4_breakout"))
+                    long_text+=f"<code>{pair} @ {close} , h4 @ {h4}</code>\n"
+                    # await handler.send_message(chat_id = chat_id,  msg=f"[DAILY] {pair} @ {close} crossing Daily-H4 @ {h4}", topic=config.get("d_h4_breakout"))
                 
-                if(open >= l4 and close<=l4):
+                elif(open >= l4 and close<=l4):
                     logger.info(f" {pair} matched l4 dsinside_camarilla_list")
-                    await handler.send_message(chat_id = chat_id,  msg=f"[DAILY] {pair} @ {close} crossing Daily-L4 @ {l4}", topic=config.get("d_l4_breakdown"))
-        
+                    short_text+=f"<code>{pair} @ {close} , l4 @ {l4}</code>\n"
+                    # await handler.send_message(chat_id = chat_id,  msg=f"[DAILY] {pair} @ {close} crossing Daily-L4 @ {l4}", topic=config.get("d_l4_breakdown"))
+        if(long_text!=""):
+            long_text = f"\n Day H4 Breakoutt\n-----------------\n"+long_text
+            print(long_text)
+            await handler.send_message(chat_id = chat_id,  msg=long_text, topic=config.get("d_h4_breakout"))
+
+        if(short_text!=""):
+            short_text = f"\n Day L4 Breakdown\n-----------------\n"+short_text
+            print(short_text)
+            await handler.send_message(chat_id = chat_id,  msg=long_text, topic=config.get("d_l4_breakdown"))
+
+        long_text=""
+        short_text=""
         for pair, _ohlc in zip(wsinside_camarilla_list, executor.map(partial_check_price, wsinside_camarilla_list)):
             if _ohlc is not None:
                 close = _ohlc[3]
@@ -560,12 +576,24 @@ async def check_break(context: ContextTypes.DEFAULT_TYPE) -> None:
                 logger.info(f"winside_camarilla_list {pair} open:{open} close:{close} h4:{h4} l4:{l4}")
                 if(open <= h4 and close>=h4):
                     logger.info(f" {pair} matched h4 wsinside_camarilla_list")
-                    await handler.send_message(chat_id = chat_id,  msg=f"[WEEK] {pair} @ {close} crossing Week-H4 @ {h4}", topic=config.get("w_h4_breakout"))
+                    long_text+=f"<code>{pair} @ {close} , h4 @ {h4}</code>\n"
+                    # await handler.send_message(chat_id = chat_id,  msg=f"[WEEK] {pair} @ {close} crossing Week-H4 @ {h4}", topic=config.get("w_h4_breakout"))
                 
                 if(open >= l4 and close<=l4):
                     logger.info(f" {pair} matched l4 wsinside_camarilla_list")
-                    await handler.send_message(chat_id = chat_id,  msg=f"[WEEK] {pair} @ {close} crossing Week-L4 @ {l4}", topic=config.get("w_l4_breakdown"))
+                    short_text+=f"<code>{pair} @ {close} , l4 @ {l4}</code>\n"
+                    # await handler.send_message(chat_id = chat_id,  msg=f"[WEEK] {pair} @ {close} crossing Week-L4 @ {l4}", topic=config.get("w_l4_breakdown"))
+        if(long_text!=""):
+            long_text = f"\n Week H4 Breakoutt\n-----------------\n"+long_text
+            print(long_text)
+            await handler.send_message(chat_id = chat_id,  msg=long_text, topic=config.get("w_h4_breakout"))
+        if(short_text!=""):
+            short_text = f"\n Week L4 Breakdown\n-----------------\n"+short_text
+            print(short_text)
+            await handler.send_message(chat_id = chat_id,  msg=long_text, topic=config.get("w_l4_breakdown"))
 
+        long_text=""
+        short_text=""
         for pair, _ohlc in zip(msinside_camarilla_list, executor.map(partial_check_price, msinside_camarilla_list)):
             if _ohlc is not None:
                 close = _ohlc[3]
@@ -575,12 +603,24 @@ async def check_break(context: ContextTypes.DEFAULT_TYPE) -> None:
                 logger.info(f"minside_camarilla_list {pair} open:{open} close:{close} h4:{h4} l4:{l4}")
                 if(open <= h4 and close>=h4):
                     logger.info(f" {pair} matched h4 minside_camarilla_list")
-                    await handler.send_message(chat_id = chat_id,  msg=f"[MONTH] {pair} @ {close} crossing month-H4 @ {h4}", topic=config.get("m_h4_breakout"))
+                    long_text+=f"<code>{pair} @ {close} , h4 @ {h4}</code>\n"
+                    # await handler.send_message(chat_id = chat_id,  msg=f"[MONTH] {pair} @ {close} crossing month-H4 @ {h4}", topic=config.get("m_h4_breakout"))
                 
                 if(open >= l4 and close<=l4):
                     logger.info(f" {pair} matched l4 minside_camarilla_list")
-                    await handler.send_message(chat_id = chat_id,  msg=f"[MONTH] {pair} @ {close} crossing month-L4 @ {l4}", topic=config.get("m_l4_breakdown"))
+                    short_text+=f"<code>{pair} @ {close} , l4 @ {l4}</code>\n"
+                    # await handler.send_message(chat_id = chat_id,  msg=f"[MONTH] {pair} @ {close} crossing month-L4 @ {l4}", topic=config.get("m_l4_breakdown"))
 
+        if(long_text!=""):
+            long_text = f"\n Month H4 Breakoutt\n-----------------\n"+long_text
+            print(long_text)
+            await handler.send_message(chat_id = chat_id,  msg=long_text, topic=config.get("m_h4_breakout"))
+        if(short_text!=""):
+            short_text = f"\n Month L4 Breakdown\n-----------------\n"+short_text
+            print(short_text)
+            await handler.send_message(chat_id = chat_id,  msg=long_text, topic=config.get("m_l4_breakdown"))
+
+        long_text=""
         for pair, _ohlc in zip(dbullish_gpz_list, executor.map(partial_check_price, dbullish_gpz_list)):
             
             if _ohlc is not None:
@@ -590,8 +630,15 @@ async def check_break(context: ContextTypes.DEFAULT_TYPE) -> None:
                 logger.info(f"dbullish_gpz_list {pair} open:{open} close:{close} tc:{tc}")
                 if(open <= tc and close>=tc):
                     logger.info(f" {pair} matched dbullish_gpz_list")
-                    await handler.send_message(chat_id = chat_id,  msg=f"[DAILY] {pair} @ {close} crossing Daily-TC @ {tc}", topic=config.get("d_gpz_breakout"))
+                    long_text+=f"<code>{pair} @ {close} , TC @ {tc}</code>\n"
+                    # await handler.send_message(chat_id = chat_id,  msg=f"[DAILY] {pair} @ {close} crossing Daily-TC @ {tc}", topic=config.get("d_gpz_breakout"))
                 
+        if(long_text!=""):
+            long_text = f"\n Day Bullish GPZ Breakout\n-----------------\n"+long_text
+            print(long_text)
+            await handler.send_message(chat_id = chat_id,  msg=long_text, topic=config.get("d_gpz_breakout"))
+        
+        long_text=""
         for pair, _ohlc in zip(wbullish_gpz_list, executor.map(partial_check_price, wbullish_gpz_list)):
       
             if _ohlc is not None:
@@ -601,8 +648,15 @@ async def check_break(context: ContextTypes.DEFAULT_TYPE) -> None:
                 logger.info(f" wbullish_gpz_list {pair} open:{open} close:{close} tc:{tc}")
                 if(open <= tc and close>=tc):
                     logger.info(f"********* {pair} matched wbullish_gpz_list")
-                    await handler.send_message(chat_id = chat_id,  msg=f"[WEEK] {pair} @ {close} crossing Week-TC @ {tc}", topic=config.get("w_gpz_breakout"))
+                    long_text+=f"<code>{pair} @ {close} , TC @ {tc}</code>\n"
+                    # await handler.send_message(chat_id = chat_id,  msg=f"[WEEK] {pair} @ {close} crossing Week-TC @ {tc}", topic=config.get("w_gpz_breakout"))
                 
+        if(long_text!=""):
+            long_text = f"\n Week Bullish GPZ Breakout\n-----------------\n"+long_text
+            print(long_text)
+            await handler.send_message(chat_id = chat_id,  msg=long_text, topic=config.get("w_gpz_breakout"))
+
+        long_text=""
         for pair, _ohlc in zip(mbullish_gpz_list, executor.map(partial_check_price, mbullish_gpz_list)):
         
             if _ohlc is not None:
@@ -612,8 +666,15 @@ async def check_break(context: ContextTypes.DEFAULT_TYPE) -> None:
                 logger.info(f"mbullish_gpz_list {pair} open:{open} close:{close} tc:{tc}")
                 if(open <= tc and close>=tc):
                     logger.info(f"********* {pair} matched mbullish_gpz_list")
-                    await handler.send_message(chat_id = chat_id,  msg=f"[MONTH] {pair} @ {close} crossing Monthly-TC @ {tc}", topic=config.get("m_gpz_breakout"))
+                    long_text+=f"<code>{pair} @ {close} , TC @ {tc}</code>\n"
+                    # await handler.send_message(chat_id = chat_id,  msg=f"[MONTH] {pair} @ {close} crossing Monthly-TC @ {tc}", topic=config.get("m_gpz_breakout"))
+        
+        if(long_text!=""):
+            long_text = f"\n Month Bullish GPZ Breakout\n-----------------\n"+long_text
+            print(long_text)
+            await handler.send_message(chat_id = chat_id,  msg=long_text, topic=config.get("m_gpz_breakout"))
 
+        short_text=""
         for pair, _ohlc in zip(dbearish_gpz_list, executor.map(partial_check_price, dbearish_gpz_list)):
             
             if _ohlc is not None:
@@ -623,8 +684,15 @@ async def check_break(context: ContextTypes.DEFAULT_TYPE) -> None:
                 logger.info(f"dbearish_gpz_list {pair} open:{open} close:{close}  bc:{bc}")
                 if(open >= bc and close<=bc):
                     logger.info(f"********* {pair} matched dbearish_gpz_list")
-                    await handler.send_message(chat_id = chat_id,  msg=f"[DAILY] {pair} @ {close} crossing Daily-BC @ {bc}", topic=config.get("d_gpz_breakdown"))
-                
+                    short_text+=f"<code>{pair} @ {close} , BC @ {bc}</code>\n"
+                    # await handler.send_message(chat_id = chat_id,  msg=f"[DAILY] {pair} @ {close} crossing Daily-BC @ {bc}", topic=config.get("d_gpz_breakdown"))
+        
+        if(short_text!=""):
+            short_text = f"\n Daily Bearish GPZ Breakdown\n-----------------\n"+short_text
+            print(short_text)
+            await handler.send_message(chat_id = chat_id,  msg=long_text, topic=config.get("d_gpz_breakdown"))
+
+        short_text=""  
         for pair, _ohlc in zip(wbearish_gpz_list, executor.map(partial_check_price, wbearish_gpz_list)):
             
             if _ohlc is not None:
@@ -634,8 +702,15 @@ async def check_break(context: ContextTypes.DEFAULT_TYPE) -> None:
                 logger.info(f"wbearish_gpz_list {pair} open:{open} close:{close} bc:{bc}")
                 if(open >= bc and close<=bc):
                     logger.info(f"********* {pair} matched wbearish_gpz_list")
-                    await handler.send_message(chat_id = chat_id,  msg=f"[WEEK] {pair} @ {close} crossing Week-BC @ {bc}", topic=config.get("w_gpz_breakdown"))
-                
+                    short_text+=f"<code>{pair} @ {close} , BC @ {bc}</code>\n"
+                    # await handler.send_message(chat_id = chat_id,  msg=f"[WEEK] {pair} @ {close} crossing Week-BC @ {bc}", topic=config.get("w_gpz_breakdown"))
+        
+        if(short_text!=""):
+            short_text = f"\n Week Bearish GPZ Breakdown\n-----------------\n"+short_text
+            print(short_text)
+            await handler.send_message(chat_id = chat_id,  msg=long_text, topic=config.get("w_gpz_breakdown"))
+
+        short_text=""
         for pair, _ohlc in zip(mbearish_gpz_list, executor.map(partial_check_price, mbearish_gpz_list)):
             
             if _ohlc is not None:
@@ -645,7 +720,13 @@ async def check_break(context: ContextTypes.DEFAULT_TYPE) -> None:
                 logger.info(f"mbearish_gpz_list {pair} open:{open} close:{close} bc:{bc}")
                 if(open >= bc and close<=bc):
                     logger.info(f"********* {pair} matched mbearish_gpz_list")
-                    await handler.send_message(chat_id = chat_id,  msg=f"[MONTH] {pair} @ {close} crossing Monthly-BC @ {bc}", topic=config.get("m_gpz_breakdown"))
+                    short_text+=f"<code>{pair} @ {close} , BC @ {bc}</code>\n"
+                    # await handler.send_message(chat_id = chat_id,  msg=f"[MONTH] {pair} @ {close} crossing Monthly-BC @ {bc}", topic=config.get("m_gpz_breakdown"))\
+
+        if(short_text!=""):
+            short_text = f"\n Month Bearish GPZ Breakdown\n-----------------\n"+short_text
+            print(short_text)
+            await handler.send_message(chat_id = chat_id,  msg=long_text, topic=config.get("m_gpz_breakdown"))
 
         
 symbol_ta_list = list(mit.sliced([f"BINANCE:{pair}.P" for pair in script_list],20))
@@ -653,32 +734,64 @@ symbol_ta_list = list(mit.sliced([f"BINANCE:{pair}.P" for pair in script_list],2
 async def check_30m_break(context: ContextTypes.DEFAULT_TYPE) -> None:
     logger.info(f"Checking 30m Break")
     chat_id = context.job.data["chat_id"]
-    partial_rsi = functools.partial(get_ta_analysis, interval=ta.Interval.INTERVAL_4_HOURS)
-    with concurrent.futures.ProcessPoolExecutor(max_workers=5) as executor:
+    ta_analysis_4h = get_ta_analysis(ta.Interval.INTERVAL_4_HOURS)
+    await check_rsi_break(ta_analysis_4h,chat_id,"4h")
+
+    d_analysis = pivot_map.get("day",{}).get("analysis")
+    await check_rsi_break(d_analysis,chat_id,"daily")
+
+    w_analysis = pivot_map.get("week",{}).get("analysis")
+    await check_rsi_break(w_analysis,chat_id,"week")
+
+    m_analysis = pivot_map.get("month",{}).get("analysis")
+    await check_rsi_break(m_analysis,chat_id,"month")
+
+async def check_rsi_break(analysis_ta:dict, chat_id, interval):
+    logger.info(f"Checking RSI Break {interval}")
+    # if analysis empty dont do anything
+    if(analysis_ta is None):
+        return
+    
+    text=""
+    for pair, analysis in analysis_ta.items():
+        if(analysis is not None and analysis.indicators['RSI'] is not None ):
+            logger.info(f"********* {pair} {interval} {analysis.indicators['RSI']} {analysis.indicators['RSI[1]']}")
+            rsi = round(analysis.indicators["RSI"],1)
+            close = analysis.indicators["close"]
+            if(analysis.indicators['RSI[1]'] is not None ):
+                
+                rsi_prev = round(analysis.indicators["RSI[1]"],1)
+                if(rsi_prev <=50 and rsi>=50):
+                    logger.info(f"********* {pair} {interval} RSI Breaking RSI-{rsi} prev-rsi-{rsi_prev}")
+                    text+=f"<code>{pair.replace('BINANCE:','')} @ {close}</code>\n"
+            else:
+                if(rsi>=50):
+                    logger.info(f"********* {pair} {interval} RSI above 50 RSI-{rsi}")
+                    text+=f"<code>{pair.replace('BINANCE:','')} @ {close} RSI : {rsi} above 50 </code>\n"
+                logger.info(f"---- Missing RSI[1] for {pair}")        
+        else:
+            logger.info(f"---- Missing analysis for {pair} {analysis}")
+
+    if(text!=''):                
+        text = f"\n {interval} RSI-50 Breakout\n-----------------\n"+text
+        print(text)
+        await handler.send_message(chat_id = chat_id,  msg=text, topic=config.get("rsi_50_breakout"))
         
+
+def get_ta_analysis(interval=ta.Interval.INTERVAL_1_DAY):
+    logger.info(f"--Updating rsi {interval}")
+    partial_rsi = functools.partial(get_ta, interval=interval)
+    ta_analysis ={}
+    with concurrent.futures.ProcessPoolExecutor(max_workers=2) as executor:
         for pairs, analysis_dict in zip(symbol_ta_list, executor.map(partial_rsi, symbol_ta_list)):
-            logger.info(f" checking for RSI no of pairs: {len(pairs)}")
-            if analysis_dict is not None:
-                for pair, analysis in analysis_dict.items():
-                    if(analysis is not None):
-                        rsi = round(analysis.indicators["RSI"],1)
-                        rsi_prev = round(analysis.indicators["RSI[1]"],1)
-                        close = analysis.indicators["close"]
-                        if(rsi is None or rsi_prev is None):
-                            logger.info(f"---- Missing RSI for {pair}")
-                        elif(rsi_prev <=50 and rsi>=50):
-                            logger.info(f"********* {pair} 4hr RSI Breaking RSI-{rsi} prev-rsi-{rsi_prev}")
-                            await handler.send_message(chat_id = chat_id,  msg=f"{pair} @ {close} \n4hr RSI[{rsi}] crossing 50 -  PREV-RSI [{rsi_prev}]", topic=config.get("4hr_rsi_50_breakout"))
-                    else:
-                        logger.info(f"---- Missing analysis for {pair}")
-                        
-
-
-
-def get_ta_analysis(script_list, interval=ta.Interval.INTERVAL_1_DAY):
+            if(analysis_dict is not None):
+                ta_analysis.update(analysis_dict)
     
+    return ta_analysis
+
+    
+def get_ta(script_list, interval):
     return ta.get_multiple_analysis(screener="crypto", interval=interval, symbols=script_list)
-    
 
 async def update_pivots(context: ContextTypes.DEFAULT_TYPE) -> None:
     await fetch_data(context)
@@ -693,7 +806,18 @@ async def fetch_data(context: ContextTypes.DEFAULT_TYPE) -> None:
     chat_id = context.job.data["chat_id"]
     logger.info(f"Loading Pivots poll {type}: {_poll}")
     pivot_map[type]={}
-    # await handler.send_message(chat_id=chat_id, msg=f"Loading {type} Pivots from {start_str} pls wait for few minutes.....", topic=config.get(type))
+    
+    #update RSI
+    if(type=="day"):
+        dp = pivot_map.get("day",{})
+        dp["analysis"]=get_ta_analysis(ta.Interval.INTERVAL_1_DAY)
+    elif(type=="week"):
+        dp = pivot_map.get("week",{})
+        dp["analysis"]=get_ta_analysis(ta.Interval.INTERVAL_1_WEEK)
+    elif(type=="month"):
+        dp = pivot_map.get("month",{})
+        dp["analysis"]=get_ta_analysis(ta.Interval.INTERVAL_1_MONTH)
+
     count = 0
     total = len(script_list)
     partial_check_price = functools.partial(get_cprs, type, interval, start_str)
@@ -961,14 +1085,7 @@ def main():
     
     # log all errors
     dp.add_error_handler(error)
-    data={
-        "chat_id":-1001902874892,
-    }
-    t=datetime.datetime.now()
-    first_30m = round_dt(t, timedelta(minutes=30)).astimezone(pytz.utc)+timedelta(seconds=10)
-    dp.job_queue.run_repeating(check_30m_break, name="check_30m_break",  interval=30*60, first=first_30m, data=data)
-    dp.job_queue.run_once(check_30m_break, name="check_30m_break_once", when=1, data=data)
-
+   
     dat = date.today() - timedelta(days=2)
     interval = Client.KLINE_INTERVAL_1DAY
     dstart_str = dat.strftime('%d %B %Y')
@@ -980,7 +1097,7 @@ def main():
             "start_str": dstart_str,
         }
     dp.job_queue.run_daily(update_pivots, name="daily_update_daily_pivots", time=datetime.time(hour=0, minute=10).replace(tzinfo=pytz.UTC), data=data)
-    dp.job_queue.run_once(fetch_data, name="once_update_daily_pivots", when=60, data=data)
+    dp.job_queue.run_once(fetch_data, name="once_update_daily_pivots", when=30, data=data)
 
 
     winterval = Client.KLINE_INTERVAL_1WEEK
@@ -994,7 +1111,7 @@ def main():
         "start_str": wstart_str,
     }
     dp.job_queue.run_daily(update_pivots, name="daily_update_week_pivots", time=datetime.time(hour=0, minute=10).replace(tzinfo=pytz.UTC), data=wdata)
-    dp.job_queue.run_once(fetch_data, name="once_update_week_pivots",  when=120, data=wdata)
+    dp.job_queue.run_once(fetch_data, name="once_update_week_pivots",  when=90, data=wdata)
 
     minterval = Client.KLINE_INTERVAL_1MONTH    
     mdat =  date.today().replace(day=1) - relativedelta(months=2,)
@@ -1007,7 +1124,15 @@ def main():
         "start_str": mstart_str,
     }
     dp.job_queue.run_daily(update_pivots, name="daily_update_monthly_pivots", time=datetime.time(hour=0, minute=10).replace(tzinfo=pytz.UTC), data=mdata)
-    dp.job_queue.run_once(fetch_data, name="once_update_monthly_pivots", when=180, data=mdata)
+    dp.job_queue.run_once(fetch_data, name="once_update_monthly_pivots", when=120, data=mdata)
+
+    data={
+        "chat_id":-1001902874892,
+    }
+    t=datetime.datetime.now()
+    first_30m = round_dt(t, timedelta(minutes=30)).astimezone(pytz.utc)+timedelta(seconds=10)
+    dp.job_queue.run_repeating(check_30m_break, name="check_30m_break",  interval=30*60, first=first_30m, data=data)
+    dp.job_queue.run_once(check_30m_break, name="check_30m_break_once", when=180, data=data)
 
     t=datetime.datetime.now() #+timedelta(minutes=10)
     first = round_dt(t, timedelta(minutes=5)).astimezone(pytz.utc)+timedelta(seconds=10)
@@ -1015,7 +1140,8 @@ def main():
     check_data={
         "chat_id":-1001902874892
     }
-    dp.job_queue.run_repeating(check_break, name="check_break",  interval=5*60, first=first, data=check_data)
+    dp.job_queue.run_repeating(check_break, name="check_break",  interval=5*60, first=first, data=check_data)   
+
 
     dp.run_polling()
 
@@ -1036,7 +1162,7 @@ config={
     "w_l4_breakdown":451,
     "m_h4_breakout":449,
     "m_l4_breakdown":451,
-    "4hr_rsi_50_breakout":1628,
+    "rsi_50_breakout":1628,
 }
 
 def round_dt(dt, delta):
