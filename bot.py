@@ -563,7 +563,7 @@ async def check_break(context: ContextTypes.DEFAULT_TYPE) -> None:
         if(short_text!=""):
             short_text = f"\n Day L4 Breakdown\n-----------------\n"+short_text
             print(short_text)
-            await handler.send_message(chat_id = chat_id,  msg=long_text, topic=config.get("d_l4_breakdown"))
+            await handler.send_message(chat_id = chat_id,  msg=short_text, topic=config.get("d_l4_breakdown"))
 
         long_text=""
         short_text=""
@@ -590,7 +590,7 @@ async def check_break(context: ContextTypes.DEFAULT_TYPE) -> None:
         if(short_text!=""):
             short_text = f"\n Week L4 Breakdown\n-----------------\n"+short_text
             print(short_text)
-            await handler.send_message(chat_id = chat_id,  msg=long_text, topic=config.get("w_l4_breakdown"))
+            await handler.send_message(chat_id = chat_id,  msg=short_text, topic=config.get("w_l4_breakdown"))
 
         long_text=""
         short_text=""
@@ -618,7 +618,7 @@ async def check_break(context: ContextTypes.DEFAULT_TYPE) -> None:
         if(short_text!=""):
             short_text = f"\n Month L4 Breakdown\n-----------------\n"+short_text
             print(short_text)
-            await handler.send_message(chat_id = chat_id,  msg=long_text, topic=config.get("m_l4_breakdown"))
+            await handler.send_message(chat_id = chat_id,  msg=short_text, topic=config.get("m_l4_breakdown"))
 
         long_text=""
         for pair, _ohlc in zip(dbullish_gpz_list, executor.map(partial_check_price, dbullish_gpz_list)):
@@ -690,7 +690,7 @@ async def check_break(context: ContextTypes.DEFAULT_TYPE) -> None:
         if(short_text!=""):
             short_text = f"\n Daily Bearish GPZ Breakdown\n-----------------\n"+short_text
             print(short_text)
-            await handler.send_message(chat_id = chat_id,  msg=long_text, topic=config.get("d_gpz_breakdown"))
+            await handler.send_message(chat_id = chat_id,  msg=short_text, topic=config.get("d_gpz_breakdown"))
 
         short_text=""  
         for pair, _ohlc in zip(wbearish_gpz_list, executor.map(partial_check_price, wbearish_gpz_list)):
@@ -708,7 +708,7 @@ async def check_break(context: ContextTypes.DEFAULT_TYPE) -> None:
         if(short_text!=""):
             short_text = f"\n Week Bearish GPZ Breakdown\n-----------------\n"+short_text
             print(short_text)
-            await handler.send_message(chat_id = chat_id,  msg=long_text, topic=config.get("w_gpz_breakdown"))
+            await handler.send_message(chat_id = chat_id,  msg=short_text, topic=config.get("w_gpz_breakdown"))
 
         short_text=""
         for pair, _ohlc in zip(mbearish_gpz_list, executor.map(partial_check_price, mbearish_gpz_list)):
@@ -726,7 +726,7 @@ async def check_break(context: ContextTypes.DEFAULT_TYPE) -> None:
         if(short_text!=""):
             short_text = f"\n Month Bearish GPZ Breakdown\n-----------------\n"+short_text
             print(short_text)
-            await handler.send_message(chat_id = chat_id,  msg=long_text, topic=config.get("m_gpz_breakdown"))
+            await handler.send_message(chat_id = chat_id,  msg=short_text, topic=config.get("m_gpz_breakdown"))
 
         
 symbol_ta_list = list(mit.sliced([f"BINANCE:{pair}.P" for pair in script_list],20))
