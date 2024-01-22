@@ -466,7 +466,7 @@ async def today_signals(update: Update, context: ContextTypes.DEFAULT_TYPE):
             
         }
     
-    logger.info(f"Loading Daily Pivots from {start_str} pls wait for few minutes.....")
+    
     # context.job_queue.run_daily(update_pivots, time=datetime.time(hour=1, minute=0), conmsg=[update.message.chat_id, list])
     # context.job_queue.run_once(update_pivots, when=poll, conmsg=[update.message.chat_id, list, poll, "day", interval, start_str, context.args])
     context.job_queue.run_once(update_pivots, when=poll, data=data)
@@ -478,7 +478,7 @@ async def week_signals(update: Update, context: ContextTypes.DEFAULT_TYPE):
     interval = Client.KLINE_INTERVAL_1WEEK
     dat = date.today() + relativedelta(weeks=-3, weekday=MO(0))
     start_str = dat.strftime('%d %B %Y')
-    logger.info(f"Loading Weekly Pivots from {start_str} pls wait for few minutes.....")
+    
     # context.job_queue.run_daily(update_pivots, time=datetime.time(hour=1, minute=0), conmsg=[update.message.chat_id, list])
     # context.job_queue.run_once(update_pivots, when=poll, conmsg=[update.message.chat_id, list, poll, "week",interval, start_str, context.args])
     data={
@@ -498,7 +498,7 @@ async def month_signals(update: Update, context: ContextTypes.DEFAULT_TYPE):
     interval = Client.KLINE_INTERVAL_1MONTH    
     dat =  date.today().replace(day=1) - relativedelta(months=2,)
     start_str = dat.strftime('%d %B %Y')
-    logger.info(f"Loading Monthly Pivots from {start_str} pls wait for few minutes.....")
+    
     # context.job_queue.run_daily(update_pivots, time=datetime.time(hour=1, minute=0), conmsg=[update.message.chat_id, list])
     # context.job_queue.run_once(update_pivots, when=poll, conmsg=[update.message.chat_id, list, poll, "month", interval, start_str, context.args])
     data={
@@ -754,7 +754,7 @@ async def check_rsi_break(analysis_ta:dict, chat_id, interval):
     text=""
     for pair, analysis in analysis_ta.items():
         if(analysis is not None and analysis.indicators['RSI'] is not None ):
-            logger.info(f"********* {pair} {interval} {analysis.indicators['RSI']} {analysis.indicators['RSI[1]']}")
+            # logger.info(f"********* {pair} {interval} {analysis.indicators['RSI']} {analysis.indicators['RSI[1]']}")
             rsi = round(analysis.indicators["RSI"],1)
             close = analysis.indicators["close"]
             if(analysis.indicators['RSI[1]'] is not None ):
@@ -817,7 +817,9 @@ async def fetch_data(context: ContextTypes.DEFAULT_TYPE) -> None:
 
     count = 0
     total = len(script_list)
+    logger.info(f"Loading {type} Pivots from {start_str} pls wait for few minutes.....")
     partial_check_price = functools.partial(get_cprs, type, interval, start_str)
+
     with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
         # for pair, (yday_tc, yday_p, yday_bc, tday_tc, tday_p, tday_bc, yday_c) in zip(list, executor.map(partial_check_price, list)):
         for pair, _pivots in zip(script_list, executor.map(partial_check_price, script_list)):
