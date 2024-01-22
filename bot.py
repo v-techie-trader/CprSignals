@@ -1100,7 +1100,7 @@ def main():
 
 
     winterval = Client.KLINE_INTERVAL_1WEEK
-    wdat = date.today() + relativedelta(weeks=-3, weekday=MO(0))
+    wdat = date.today() + relativedelta(weeks=-2, weekday=MO(0))
     wstart_str = wdat.strftime('%d %B %Y')
     wdata={
         "chat_id":-1001902874892,
