@@ -476,7 +476,7 @@ async def week_signals(update: Update, context: ContextTypes.DEFAULT_TYPE):
     poll = 1
 
     interval = Client.KLINE_INTERVAL_1WEEK
-    dat = date.today() + relativedelta(weeks=-3, weekday=MO(0))
+    dat = date.today() + relativedelta(weeks=-2, weekday=MO(0))
     start_str = dat.strftime('%d %B %Y')
     
     # context.job_queue.run_daily(update_pivots, time=datetime.time(hour=1, minute=0), conmsg=[update.message.chat_id, list])
