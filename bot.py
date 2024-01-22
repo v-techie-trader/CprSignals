@@ -467,7 +467,7 @@ async def today_signals(update: Update, context: ContextTypes.DEFAULT_TYPE):
             
         }
     
-    # await handler.send_message(chat_id=context._chat_id, msg=f"Loading Daily Pivots from {start_str} pls wait for few minutes.....", topic=config.get("day"))
+    logger.info(f"Loading Daily Pivots from {start_str} pls wait for few minutes.....")
     # context.job_queue.run_daily(update_pivots, time=datetime.time(hour=1, minute=0), conmsg=[update.message.chat_id, list])
     # context.job_queue.run_once(update_pivots, when=poll, conmsg=[update.message.chat_id, list, poll, "day", interval, start_str, context.args])
     context.job_queue.run_once(update_pivots, when=poll, data=data)
@@ -479,7 +479,7 @@ async def week_signals(update: Update, context: ContextTypes.DEFAULT_TYPE):
     interval = Client.KLINE_INTERVAL_1WEEK
     dat = date.today() + relativedelta(weeks=-3, weekday=MO(0))
     start_str = dat.strftime('%d %B %Y')
-    # await handler.send_message(chat_id=context._chat_id, msg=f"Loading Weekly Pivots from {start_str} pls wait for few minutes.....", topic=config.get("week"))
+    logger.info(f"Loading Weekly Pivots from {start_str} pls wait for few minutes.....")
     # context.job_queue.run_daily(update_pivots, time=datetime.time(hour=1, minute=0), conmsg=[update.message.chat_id, list])
     # context.job_queue.run_once(update_pivots, when=poll, conmsg=[update.message.chat_id, list, poll, "week",interval, start_str, context.args])
     data={
@@ -499,7 +499,7 @@ async def month_signals(update: Update, context: ContextTypes.DEFAULT_TYPE):
     interval = Client.KLINE_INTERVAL_1MONTH    
     dat =  date.today().replace(day=1) - relativedelta(months=2,)
     start_str = dat.strftime('%d %B %Y')
-    # await handler.send_message(chat_id=context._chat_id, msg=f"Loading Monthly Pivots from {start_str} pls wait for few minutes.....", topic=config.get("month"))
+    logger.info(f"Loading Monthly Pivots from {start_str} pls wait for few minutes.....")
     # context.job_queue.run_daily(update_pivots, time=datetime.time(hour=1, minute=0), conmsg=[update.message.chat_id, list])
     # context.job_queue.run_once(update_pivots, when=poll, conmsg=[update.message.chat_id, list, poll, "month", interval, start_str, context.args])
     data={
@@ -808,14 +808,12 @@ async def fetch_data(context: ContextTypes.DEFAULT_TYPE) -> None:
     pivot_map[type]={}
     
     #update RSI
+    dp = pivot_map[type]
     if(type=="day"):
-        dp = pivot_map.get("day",{})
         dp["analysis"]=get_ta_analysis(ta.Interval.INTERVAL_1_DAY)
     elif(type=="week"):
-        dp = pivot_map.get("week",{})
         dp["analysis"]=get_ta_analysis(ta.Interval.INTERVAL_1_WEEK)
     elif(type=="month"):
-        dp = pivot_map.get("month",{})
         dp["analysis"]=get_ta_analysis(ta.Interval.INTERVAL_1_MONTH)
 
     count = 0
@@ -825,7 +823,7 @@ async def fetch_data(context: ContextTypes.DEFAULT_TYPE) -> None:
         # for pair, (yday_tc, yday_p, yday_bc, tday_tc, tday_p, tday_bc, yday_c) in zip(list, executor.map(partial_check_price, list)):
         for pair, _pivots in zip(script_list, executor.map(partial_check_price, script_list)):
             if("yday_tc" in _pivots):
-                pivot_map[type][pair]= _pivots
+                dp[pair]= _pivots
                 count=count+1
                 logger.debug(f"{count} / {total} ------> {pair} updated")
             else:
@@ -1123,24 +1121,24 @@ def main():
         "interval": minterval,
         "start_str": mstart_str,
     }
-    dp.job_queue.run_daily(update_pivots, name="daily_update_monthly_pivots", time=datetime.time(hour=0, minute=10).replace(tzinfo=pytz.UTC), data=mdata)
+    dp.job_queue.run_daily(update_pivots, name="daily_update_monthly_pivots", time=datetime.time(hour=0, minute=30).replace(tzinfo=pytz.UTC), data=mdata)
     dp.job_queue.run_once(fetch_data, name="once_update_monthly_pivots", when=150, data=mdata)
 
     data={
         "chat_id":-1001902874892,
     }
     t=datetime.datetime.now()
-    first_30m = round_dt(t, timedelta(minutes=30)).astimezone(pytz.utc)+timedelta(seconds=10)
-    dp.job_queue.run_repeating(check_30m_break, name="check_30m_break",  interval=30*60, first=first_30m, data=data)
+    first_30m = round_dt(t, timedelta(minutes=30)).astimezone(pytz.utc)+timedelta(seconds=30)
+    dp.job_queue.run_repeating(check_30m_break, name="check_30m_break",  interval=(60*60)+30, first=first_30m, data=data)
     dp.job_queue.run_once(check_30m_break, name="check_30m_break_once", when=210, data=data)
 
     t=datetime.datetime.now() #+timedelta(minutes=10)
-    first = round_dt(t, timedelta(minutes=5)).astimezone(pytz.utc)+timedelta(seconds=10)
-    logger.info(f"{t.astimezone(pytz.utc)} checking for break every 5 mins starting {first}")
+    first = round_dt(t, timedelta(minutes=15)).astimezone(pytz.utc)+timedelta(seconds=30)
+    logger.info(f"{t.astimezone(pytz.utc)} checking for break every 15 mins starting {first}")
     check_data={
         "chat_id":-1001902874892
     }
-    dp.job_queue.run_repeating(check_break, name="check_break",  interval=5*60, first=first, data=check_data)   
+    dp.job_queue.run_repeating(check_break, name="check_break",  interval=(15*60)+30, first=first, data=check_data)   
 
 
     dp.run_polling()
