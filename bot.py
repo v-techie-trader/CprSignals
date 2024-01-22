@@ -163,7 +163,6 @@ script_list = [
 "BNXUSDT",
 "LDOUSDT",
 "BTCDOMUSDT",
-"ETHBTC",
 "BELUSDT",
 "CVXUSDT",
 "GTCUSDT",
@@ -545,7 +544,7 @@ async def check_break(context: ContextTypes.DEFAULT_TYPE) -> None:
                 open = _ohlc[0]
                 h4 = _round(dp[pair].get("H4"))
                 l4 = _round(dp[pair].get("L4"))
-                logger.info(f"dsinside_camarilla_list {pair} open:{open} close:{close} h4:{h4} l4:{l4}")
+                # logger.info(f"dsinside_camarilla_list {pair} open:{open} close:{close} h4:{h4} l4:{l4}")
                 if(open <= h4 and close>=h4):
                     logger.info(f" {pair} matched h4 dsinside_camarilla_list")
                     long_text+=f"<code>{pair} @ {close} , h4 @ {h4}</code>\n"
@@ -573,7 +572,7 @@ async def check_break(context: ContextTypes.DEFAULT_TYPE) -> None:
                 open = _ohlc[0]
                 h4 = wp[pair].get("H4")
                 l4 = wp[pair].get("L4")
-                logger.info(f"winside_camarilla_list {pair} open:{open} close:{close} h4:{h4} l4:{l4}")
+                # logger.info(f"winside_camarilla_list {pair} open:{open} close:{close} h4:{h4} l4:{l4}")
                 if(open <= h4 and close>=h4):
                     logger.info(f" {pair} matched h4 wsinside_camarilla_list")
                     long_text+=f"<code>{pair} @ {close} , h4 @ {h4}</code>\n"
@@ -600,7 +599,7 @@ async def check_break(context: ContextTypes.DEFAULT_TYPE) -> None:
                 open = _ohlc[0]
                 h4 = mp[pair].get("H4")
                 l4 = mp[pair].get("L4")
-                logger.info(f"minside_camarilla_list {pair} open:{open} close:{close} h4:{h4} l4:{l4}")
+                # logger.info(f"minside_camarilla_list {pair} open:{open} close:{close} h4:{h4} l4:{l4}")
                 if(open <= h4 and close>=h4):
                     logger.info(f" {pair} matched h4 minside_camarilla_list")
                     long_text+=f"<code>{pair} @ {close} , h4 @ {h4}</code>\n"
@@ -627,7 +626,7 @@ async def check_break(context: ContextTypes.DEFAULT_TYPE) -> None:
                 close = _ohlc[3]
                 open = _ohlc[0]
                 tc = dp[pair].get("tday_tc")
-                logger.info(f"dbullish_gpz_list {pair} open:{open} close:{close} tc:{tc}")
+                # logger.info(f"dbullish_gpz_list {pair} open:{open} close:{close} tc:{tc}")
                 if(open <= tc and close>=tc):
                     logger.info(f" {pair} matched dbullish_gpz_list")
                     long_text+=f"<code>{pair} @ {close} , TC @ {tc}</code>\n"
@@ -645,7 +644,7 @@ async def check_break(context: ContextTypes.DEFAULT_TYPE) -> None:
                 close = _ohlc[3]
                 open = _ohlc[0]
                 tc = wp[pair].get("tday_tc")
-                logger.info(f" wbullish_gpz_list {pair} open:{open} close:{close} tc:{tc}")
+                # logger.info(f" wbullish_gpz_list {pair} open:{open} close:{close} tc:{tc}")
                 if(open <= tc and close>=tc):
                     logger.info(f"********* {pair} matched wbullish_gpz_list")
                     long_text+=f"<code>{pair} @ {close} , TC @ {tc}</code>\n"
@@ -663,7 +662,7 @@ async def check_break(context: ContextTypes.DEFAULT_TYPE) -> None:
                 close = _ohlc[3]
                 open = _ohlc[0]
                 tc = mp[pair].get("tday_tc")
-                logger.info(f"mbullish_gpz_list {pair} open:{open} close:{close} tc:{tc}")
+                # logger.info(f"mbullish_gpz_list {pair} open:{open} close:{close} tc:{tc}")
                 if(open <= tc and close>=tc):
                     logger.info(f"********* {pair} matched mbullish_gpz_list")
                     long_text+=f"<code>{pair} @ {close} , TC @ {tc}</code>\n"
@@ -681,7 +680,7 @@ async def check_break(context: ContextTypes.DEFAULT_TYPE) -> None:
                 close = _ohlc[3]
                 open = _ohlc[0]
                 bc = dp[pair].get("tday_bc")
-                logger.info(f"dbearish_gpz_list {pair} open:{open} close:{close}  bc:{bc}")
+                # logger.info(f"dbearish_gpz_list {pair} open:{open} close:{close}  bc:{bc}")
                 if(open >= bc and close<=bc):
                     logger.info(f"********* {pair} matched dbearish_gpz_list")
                     short_text+=f"<code>{pair} @ {close} , BC @ {bc}</code>\n"
@@ -699,7 +698,7 @@ async def check_break(context: ContextTypes.DEFAULT_TYPE) -> None:
                 close = _ohlc[3]
                 open = _ohlc[0]
                 bc = wp[pair].get("tday_bc")
-                logger.info(f"wbearish_gpz_list {pair} open:{open} close:{close} bc:{bc}")
+                # logger.info(f"wbearish_gpz_list {pair} open:{open} close:{close} bc:{bc}")
                 if(open >= bc and close<=bc):
                     logger.info(f"********* {pair} matched wbearish_gpz_list")
                     short_text+=f"<code>{pair} @ {close} , BC @ {bc}</code>\n"
@@ -717,7 +716,7 @@ async def check_break(context: ContextTypes.DEFAULT_TYPE) -> None:
                 close = _ohlc[3]
                 open = _ohlc[0]
                 bc = mp[pair].get("tday_bc")
-                logger.info(f"mbearish_gpz_list {pair} open:{open} close:{close} bc:{bc}")
+                # logger.info(f"mbearish_gpz_list {pair} open:{open} close:{close} bc:{bc}")
                 if(open >= bc and close<=bc):
                     logger.info(f"********* {pair} matched mbearish_gpz_list")
                     short_text+=f"<code>{pair} @ {close} , BC @ {bc}</code>\n"
