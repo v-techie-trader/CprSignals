@@ -15,11 +15,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import  path
-from webhook.views import Webhook, Watchlist
+from webhook.views import Webhook
 from django.conf.urls import include
 urlpatterns = [
     path("webhook/<name>/", Webhook.as_view(), name='webhook'),
-    path("watchlist/<name>/", Watchlist.as_view(), name='watchlist'),
     path('admin/', admin.site.urls),
     path('stocksignals/', include('health_check.urls')),
 ]

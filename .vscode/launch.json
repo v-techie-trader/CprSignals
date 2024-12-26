@@ -6,11 +6,24 @@
     "configurations": [
         {
             "name": "Python: Current File",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
             "justMyCode": true
         }
+        {
+            "name": "Webhook",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/webhook/manage.py",
+            "args": [
+                "runserver","9000"
+            ],
+            "env": {"PYTHONPATH": "${workspaceFolder}${pathSeparator}${env:PYTHONPATH}"},
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "envFile":"${workspaceFolder}/.env"
+        },
     ]
 }

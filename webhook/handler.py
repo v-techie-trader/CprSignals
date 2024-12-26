@@ -18,8 +18,9 @@ from webhook.config import settings
 logger = logging.getLogger(__name__)
 
 from telegram.error  import BadRequest
-async def send_message(msg, chat_id, topic,id="cprsignals.alerts",):
+async def send_message(msg, chat_id=None, topic=None,id="cprsignals.alerts",):
     config = settings.telegram_alert_config[id]
+    chat_id = config["channel_id"] if chat_id is None else chat_id
     if settings.send_telegram_alerts:
         tg_bot = Bot(token=config["bot_token"])
         try:

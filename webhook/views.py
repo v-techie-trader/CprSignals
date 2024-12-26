@@ -18,8 +18,6 @@ def get_timestamp():
     timestamp = time.strftime("%Y-%m-%d %X")
     return timestamp
 
-stock_sector = pd.read_csv(f"resources/stocks_sector_list.csv", index_col=0)
-stock_sector = stock_sector.reset_index()
 
 def getMessage(text="Stocksignals test"):
     
@@ -68,9 +66,9 @@ class Webhook(APIView):
             if key == settings._key_stock_signals_alerts:
                 logger.debug(f"{get_timestamp()} Alert Received & Sent!")
                 json_data = request.data
-                processed_msg = process_chartink_alert(json_data)
-                asyncio.run(handler.send_message(processed_msg, key))
-                return HttpResponse(f"Alret sent", 200)
+                processed_msg = process_alert(json_data)
+                asyncio.run(handler.send_message(msg=processed_msg))
+                return HttpResponse(f"Alert sent", 200)
             else:
                 logger.debug(f"{get_timestamp()}" , "Webhook Received & Refused! (Wrong Key)")
                 return HttpResponse(f"Refused Webhook- Not configured, Check with owner", 400)
@@ -80,117 +78,9 @@ class Webhook(APIView):
             # logger.error("Error ", e)
             return HttpResponse(f"Error", 400)
 
-class Watchlist(APIView):
-    
-    @classmethod
-    def as_view(cls, **initkwargs):
-        return super().as_view(**initkwargs)
 
-
-    def get(self, request, *args, **kwargs):
-        try:
-            td = datetime.today().date()
-            filename=f"alerts{td}.csv"
-
-            key =  kwargs['name']
-            logger.info(f"--- Watchlist Received : '{key}")
-            if key == "today":
-               
-                logger.debug(f"{get_timestamp()} Alert Received & Sent!")
-                json_data = request.data
-                #stock_name,price,sector,subcategory,scan_name
-                watchlist_df = pd.read_csv(filename, index_col=0)
-                watchlist_df['scan_name'] = watchlist_df.groupby(['stock_name'])['scan_name'].apply(list)
-                watchlist_df=watchlist_df.reset_index()
-                mapping={}
-                for index, row in watchlist_df.iterrows():
-                    scan_names = "--".join(row['scan_name'])
-                    categories = mapping.get(scan_names,{})
-                    subcategories = categories.get(row['sector'],{})
-                    stocks = subcategories.get(row['subcategory'],{})
-                    stocks[row['stock_name']]=row
-                    subcategories[row['subcategory']]= stocks
-                    categories[row['sector']]= subcategories
-                    mapping[scan_names]= categories
-                    
-                watchlist_text=""
-                scan_count=0
-                for scan_names, sectors in mapping.items():
-                    watchlist_text+=f"###{scan_names},"
-                    scan_count+=1
-                    for sector, subcategories in sectors.items():
-                        watchlist_text+=f"###{sector}-{scan_count},"
-                        for subcategory, stocks in subcategories.items():
-                            for stock_name, rows in stocks.items():
-                                    watchlist_text+=f"NSE:{stock_name},"
-                
-                response = HttpResponse(watchlist_text, content_type='text/plain')  
-                watchlist_filename=f"watchlist_{td}.txt"
-                response['Content-Disposition'] = f'attachment; filename="{watchlist_filename}"'
-
-                return response
-            else:
-                logger.debug(f"{get_timestamp()}" , "Webhook Received & Refused! (Wrong Key)")
-                return HttpResponse(f"Refused Webhook- Not configured, Check with owner", 400)
-
-        except Exception as e:
-            logger.exception(e)
-            # logger.error("Error ", e)
-            return HttpResponse(f"Error", 400)  
-
-def process_chartink_alert(json_data):
+def process_alert(json_data):
     td = datetime.today().date()
-    stocks_list = json_data["stocks"].split(",")
-    stocks_price= json_data["trigger_prices"].split(",")
-    scan_name = json_data["scan_name"]
-    chart_link= "https://in.tradingview.com/chart?symbol=NSE:{stock_name}"
-    filename=f"alerts{td}.csv"
-    sector_groups={}
-    text = f"-------{td} @ {json_data['triggered_at']}-------\n"\
-        f"<B>{json_data['scan_name']}</B>\n" \
-        "--------------------\n"
-    list_of_stocks=[]
-    for index, stock in enumerate(stocks_list):
-        sector_details=get_sector(stock)
-        category = sector_details['category']
-        subcategory = sector_details['ind_name']
-        
-        subcategory_in_category = sector_groups.get(category,{})
-        stocks_in_group = subcategory_in_category.get(subcategory,{})
-
-        stock_details={'stock_name':f"{stock}", "price":f"{stocks_price[index]}", "sector": f"{category}", "subcategory": f"{subcategory}", "scan_name":f"{scan_name}"}
-        stocks_in_group[stock] = stock_details
-        list_of_stocks.append(stock_details)
-        subcategory_in_category[subcategory]=stocks_in_group
-        sector_groups[category]=subcategory_in_category
-
-    with open(filename, 'a+') as f:
-        fieldnames = ['stock_name', 'price', 'sector','subcategory','scan_name']
-        
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
-        if f.tell() ==0:
-            writer.writeheader()
-
-        writer.writerows(list_of_stocks)
-
-
-    for category, subcategories_in_category in sorted(sector_groups.items()):
-        text+=f"|\n|<b><u>{category}</u></b>\n"
-        for subcategory, stocks_in_subcategory in sorted(subcategories_in_category.items()):
-            text+=f"|---<code>{subcategory}</code>\n"
-            for stock, details in sorted(stocks_in_subcategory.items()):
-                text+=f"|          <a href='{chart_link.format(stock_name=stock)}'>{stock:<20s}</a>\n"
-    return text
-
-
-def get_sector(symbol):
-    try:
-        list =  stock_sector.loc[stock_sector['symbol']==symbol].to_dict('records')
-        if (list):
-            return list[0]
-        
-    except Exception as e:
-        logger.error("error", e)
-        
-    logger.error(f"{symbol} not found in stock list")
-    return {'sname': f'{symbol}', 'ind_name': 'unknown', 'category': 'unknown', 'symbol': f'{symbol}', 'mcap_grade': 'unknown'}
+    name = json_data["name"]
+    msg= json_data["msg"]
+    return f"{name}\n\n{msg}"
